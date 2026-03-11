@@ -1,0 +1,1 @@
+const data = JSON.stringify({ UserNameOrEmail: 'demo', Password: 'password123', DeviceInfo: 'Web', IpAddress: '127.0.0.1' }); fetch('https://assetsapi.tatwa.com/api/v1/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data }).then(r=>r.json()).then(console.log).catch(console.error);
