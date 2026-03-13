@@ -173,11 +173,15 @@ const ProjectScreen = ({ navigation }: any) => {
 					<View style={styles.card}>
 						<View style={styles.cardIconBoxRow}>
 							<View style={styles.cardIconBoxRed}>
-								<MaterialIcons name='folder' size={24} color='#fff' />
+								<MaterialIcons name='folder' size={isMobile ? 20 : 24} color='#fff' />
 							</View>
-							<View>
-								<Text style={styles.cardTitle}>Total Projects</Text>
-								<Text style={styles.cardSubtitle}>All projects across departments</Text>
+							<View style={isMobile ? { paddingRight: 24, width: '100%' } : {}}>
+								<Text style={styles.cardTitle} numberOfLines={1}>
+									Total Projects
+								</Text>
+								<Text style={styles.cardSubtitle} numberOfLines={isMobile ? 2 : 1}>
+									All projects across departments
+								</Text>
 							</View>
 						</View>
 						<View style={styles.cardBadgeRed}>
@@ -188,11 +192,15 @@ const ProjectScreen = ({ navigation }: any) => {
 					<View style={styles.card}>
 						<View style={styles.cardIconBoxRow}>
 							<View style={styles.cardIconBoxOrange}>
-								<MaterialIcons name='currency-rupee' size={24} color='#fff' />
+								<MaterialIcons name='currency-rupee' size={isMobile ? 20 : 24} color='#fff' />
 							</View>
-							<View>
-								<Text style={styles.cardTitle}>Total Budget</Text>
-								<Text style={styles.cardSubtitle}>Allocated across active projects</Text>
+							<View style={isMobile ? { paddingRight: 24, width: '100%' } : {}}>
+								<Text style={styles.cardTitle} numberOfLines={1}>
+									Total Budget
+								</Text>
+								<Text style={styles.cardSubtitle} numberOfLines={isMobile ? 2 : 1}>
+									Allocated across active projects
+								</Text>
 							</View>
 						</View>
 						<View style={styles.cardBadgeOrange}>
@@ -463,15 +471,15 @@ const styles = StyleSheet.create({
 	},
 	// Summary Cards
 	summaryCardsRow: {
-		flexDirection: isMobile ? 'column' : 'row',
+		flexDirection: 'row',
 		marginBottom: 24,
-		gap: 24,
+		gap: isMobile ? 12 : 24,
 	},
 	card: {
 		flex: 1,
 		backgroundColor: '#fff',
 		borderRadius: 12,
-		padding: 20,
+		padding: isMobile ? 12 : 20,
 		flexDirection: 'row',
 		alignItems: 'center',
 		overflow: 'hidden',
@@ -483,70 +491,73 @@ const styles = StyleSheet.create({
 		elevation: 2,
 	},
 	cardIconBoxRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
+		flexDirection: isMobile ? 'column' : 'row',
+		alignItems: isMobile ? 'flex-start' : 'center',
 		flex: 1,
 		zIndex: 10,
 	},
 	cardIconBoxRed: {
 		backgroundColor: '#dc2626',
-		width: 48,
-		height: 48,
+		width: isMobile ? 36 : 48,
+		height: isMobile ? 36 : 48,
 		borderRadius: 10,
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginRight: 16,
+		marginRight: isMobile ? 0 : 16,
+		marginBottom: isMobile ? 8 : 0,
 	},
 	cardIconBoxOrange: {
 		backgroundColor: '#f97316',
-		width: 48,
-		height: 48,
+		width: isMobile ? 36 : 48,
+		height: isMobile ? 36 : 48,
 		borderRadius: 10,
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginRight: 16,
+		marginRight: isMobile ? 0 : 16,
+		marginBottom: isMobile ? 8 : 0,
 	},
 	cardTitle: {
-		fontSize: 15,
+		fontSize: isMobile ? 13 : 15,
 		fontWeight: 'bold',
 		color: '#111827',
 		marginBottom: 4,
 	},
 	cardSubtitle: {
-		fontSize: 12,
+		fontSize: isMobile ? 10 : 12,
 		color: '#9ca3af',
+		lineHeight: isMobile ? 14 : undefined,
 	},
 	cardBadgeRed: {
 		position: 'absolute',
 		top: 0,
 		right: 0,
 		backgroundColor: '#fee2e2',
-		borderBottomLeftRadius: 48,
-		paddingTop: 12,
-		paddingRight: 16,
-		paddingBottom: 24,
-		paddingLeft: 32,
+		borderBottomLeftRadius: isMobile ? 24 : 48,
+		paddingTop: isMobile ? 8 : 12,
+		paddingRight: isMobile ? 12 : 16,
+		paddingBottom: isMobile ? 12 : 24,
+		paddingLeft: isMobile ? 16 : 32,
 	},
 	cardBadgeRedText: {
 		color: '#b91c1c',
 		fontWeight: 'bold',
-		fontSize: 18,
+		fontSize: isMobile ? 13 : 18,
 	},
 	cardBadgeOrange: {
 		position: 'absolute',
 		top: 0,
 		right: 0,
 		backgroundColor: '#ffedd5',
-		borderBottomLeftRadius: 48,
-		paddingTop: 12,
-		paddingRight: 16,
-		paddingBottom: 24,
-		paddingLeft: 32,
+		borderBottomLeftRadius: isMobile ? 24 : 48,
+		paddingTop: isMobile ? 8 : 12,
+		paddingRight: isMobile ? 12 : 16,
+		paddingBottom: isMobile ? 12 : 24,
+		paddingLeft: isMobile ? 16 : 32,
 	},
 	cardBadgeOrangeText: {
 		color: '#c2410c',
 		fontWeight: 'bold',
-		fontSize: 18,
+		fontSize: isMobile ? 13 : 18,
 	},
 	// List Section
 	listSection: {

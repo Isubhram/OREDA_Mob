@@ -1,7 +1,10 @@
 import { Platform } from 'react-native';
 
 // Base API configuration
-const API_BASE_URL = 'https://assetsapi.tatwa.com/api/v1';
+let API_BASE_URL = 'http://192.168.30.243:7301/api/v1';
+let API_BASE_URL_PROD = 'https://assetsapi.tatwa.com/api/v1';
+
+
 
 // API Response type
 export interface ApiResponse<T> {
@@ -26,10 +29,17 @@ export class ApiError extends Error {
 
 // Generic API client
 class ApiClient {
+
     private baseURL: string;
 
     constructor(baseURL: string) {
-        this.baseURL = baseURL;
+        // add a condition for the development and production
+        if (__DEV__) {
+            this.baseURL = API_BASE_URL;
+        } else {
+            this.baseURL = API_BASE_URL_PROD;
+        }
+
     }
 
     private isRefreshing = false;
@@ -55,9 +65,16 @@ class ApiClient {
         const authData = await authService.getAuthData();
         const token = authData?.AccessToken || authData?.token || authData?.Token;
 
+        const isFormData = options.body instanceof FormData;
+
         const defaultHeaders: Record<string, string> = {
             'Content-Type': 'application/json',
         };
+
+        if (isFormData) {
+            // Let fetch handle Content-Type boundary for FormData
+            delete defaultHeaders['Content-Type'];
+        }
 
         if (token) {
             defaultHeaders['Authorization'] = `Bearer ${token}`;
@@ -165,7 +182,7 @@ class ApiClient {
         return this.request<T>(endpoint, {
             ...options,
             method: 'POST',
-            body: JSON.stringify(data),
+            body: data instanceof FormData ? data : JSON.stringify(data),
         });
     }
 
@@ -177,7 +194,7 @@ class ApiClient {
         return this.request<T>(endpoint, {
             ...options,
             method: 'PUT',
-            body: JSON.stringify(data),
+            body: data instanceof FormData ? data : JSON.stringify(data),
         });
     }
 
