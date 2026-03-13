@@ -4,14 +4,14 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProjectScreen from '../screens/ProjectScreen';
 import TenderScreen from '../screens/TenderScreen';
-import FAQScreen from '../screens/FAQScreen';
-import { Ionicons } from '@expo/vector-icons';
+import IncidentTicketScreen from '../screens/IncidentTicketScreen';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export type DrawerParamList = {
     Dashboard: undefined;
     Project: undefined;
     Tender: undefined;
-    FAQ: undefined;
+    IncidentTicket: undefined;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -64,11 +64,12 @@ const DrawerNavigator = () => {
                 }}
             />
             <Drawer.Screen
-                name="FAQ"
-                component={FAQScreen}
+                name="IncidentTicket"
+                component={IncidentTicketScreen}
                 options={{
+                    title: 'Incident Tickets',
                     drawerIcon: ({ color, size }: { color: string; size: number }) => (
-                        <Ionicons name="help-circle-outline" size={size} color={color} />
+                        <MaterialCommunityIcons name="ticket-outline" size={size} color={color} />
                     ),
                 }}
             />

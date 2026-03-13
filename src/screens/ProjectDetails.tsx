@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Project } from '../services/projectService';
 
 const { width } = Dimensions.get('window');
@@ -38,551 +39,406 @@ const ProjectDetailsScreen = ({ route, navigation }: any) => {
 	const totalSanctionedCr = totalSanctioned > 0 ? (totalSanctioned / 10000000).toFixed(2) : '0';
 
 	return (
-		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.mainScrollView}>
-				{/* Header Section */}
-				<View style={styles.headerCard}>
-					<TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-						<Feather name='arrow-left' size={18} color='#4b5563' />
-					</TouchableOpacity>
-					<View style={styles.headerIconBox}>
-						<MaterialCommunityIcons name='folder-text' size={24} color='#fff' />
-					</View>
-					<View>
-						<Text style={styles.headerTitle}>{project?.Name || 'Project Name'}</Text>
-						<View style={styles.headerSubtitleRow}>
-							<Feather name='file-text' size={14} color='#6b7280' />
-							<Text style={styles.headerSubtitle}> Project Details</Text>
+		<View style={styles.container}>
+			<StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+			<ScrollView style={styles.mainScrollView} showsVerticalScrollIndicator={false}>
+				{/* Premium Header with Gradient */}
+				<LinearGradient
+					colors={['#8b1a1a', '#c52525', '#e23f3f']}
+					style={styles.headerGradient}
+				>
+					<SafeAreaView edges={['top', 'left', 'right']}>
+						<View style={styles.headerContent}>
+							<TouchableOpacity 
+								style={styles.backButton} 
+								onPress={() => navigation.goBack()}
+								activeOpacity={0.7}
+							>
+								<Feather name='arrow-left' size={24} color='#fff' />
+							</TouchableOpacity>
+							<View style={styles.headerTitleContainer}>
+								<Text style={styles.headerTitle} numberOfLines={2}>{project?.Name || 'Project Details'}</Text>
+								<View style={styles.headerBadge}>
+									<MaterialCommunityIcons name='folder-outline' size={14} color='#fff' opacity={0.8} />
+									<Text style={styles.headerBadgeText}>
+										{project?.TypeOfFundingText || 'Solar Project'}
+									</Text>
+								</View>
+							</View>
 						</View>
-					</View>
-				</View>
+					</SafeAreaView>
+				</LinearGradient>
 
-				{/* Top Statistics Cards */}
-				<View style={[styles.statsRow, { flexDirection: isMobile ? 'column' : 'row' }]}>
-					<View style={[styles.statCard, { borderBottomColor: '#fecaca', borderBottomWidth: 3 }]}>
-						<View style={styles.statIconRow}>
+				<View style={styles.contentContainer}>
+					{/* Top Statistics Cards */}
+					<View style={styles.statsRow}>
+						<View style={[styles.statItem, { backgroundColor: '#fdf2f2' }]}>
 							<View style={[styles.statIconBox, { backgroundColor: '#fee2e2' }]}>
 								<Feather name='file-text' size={20} color='#dc2626' />
 							</View>
-							<View style={styles.statValueBox}>
-								<Text style={styles.statValueDark}>{sanctionOrdersCount}</Text>
+							<View>
+								<Text style={styles.statLabel}>Orders</Text>
+								<Text style={styles.statValue}>{sanctionOrdersCount}</Text>
 							</View>
 						</View>
-						<Text style={styles.statTitle}>Sanction Orders</Text>
-						<Text style={styles.statSubtitle}>Total orders assigned</Text>
-					</View>
 
-					<View style={[styles.statCard, { borderBottomColor: '#fed7aa', borderBottomWidth: 3 }]}>
-						<View style={styles.statIconRow}>
+						<View style={[styles.statItem, { backgroundColor: '#fff7ed' }]}>
 							<View style={[styles.statIconBox, { backgroundColor: '#ffedd5' }]}>
 								<MaterialIcons name='currency-rupee' size={20} color='#ea580c' />
 							</View>
-							<View style={styles.statValueBoxRow}>
-								<Text style={styles.statValueDark}>{totalSanctionedCr}</Text>
-								<Text style={styles.statUnit}>Cr</Text>
+							<View>
+								<Text style={styles.statLabel}>Sanctioned</Text>
+								<Text style={styles.statValue}>{totalSanctionedCr} Cr</Text>
 							</View>
 						</View>
-						<Text style={styles.statTitle}>Total Sanctioned</Text>
-						<Text style={styles.statSubtitle}>Combined amount</Text>
-					</View>
 
-					<View style={[styles.statCard, { borderBottomColor: '#bbf7d0', borderBottomWidth: 3 }]}>
-						<View style={styles.statIconRow}>
+						<View style={[styles.statItem, { backgroundColor: '#f0fdf4' }]}>
 							<View style={[styles.statIconBox, { backgroundColor: '#dcfce7' }]}>
 								<Feather name='calendar' size={20} color='#16a34a' />
 							</View>
-							<View style={styles.statValueBox}>
-								<Text style={[styles.statValueGreen]}>
-									{project?.FinancialYearName ? project?.FinancialYearName : '-'}
-								</Text>
+							<View>
+								<Text style={styles.statLabel}>FY</Text>
+								<Text style={styles.statValue}>{project?.FinancialYearName || '-'}</Text>
 							</View>
-						</View>
-						<Text style={styles.statTitle}>Financial Year</Text>
-						<Text style={styles.statSubtitle}>Current fiscal period</Text>
-					</View>
-				</View>
-
-				{/* Content Section */}
-				<View style={[styles.contentRow, { flexDirection: isMobile ? 'column' : 'row' }]}>
-					{/* Left Column */}
-					<View style={styles.leftColumn}>
-						{/* Project Information */}
-						<View style={styles.sectionCard}>
-							<View style={styles.sectionHeader}>
-								<View style={[styles.sectionIconBox, { backgroundColor: '#dc2626' }]}>
-									<Feather name='file-text' size={16} color='#fff' />
-								</View>
-								<View>
-									<Text style={styles.sectionTitle}>Project Information</Text>
-									<Text style={styles.sectionSubtitle}>Complete project details and timeline</Text>
-								</View>
-							</View>
-
-							<View style={styles.infoGrid}>
-								<View style={styles.infoItem}>
-									<View style={styles.infoIconWrapper}>
-										<Text style={styles.hashIcon}>#</Text>
-									</View>
-									<View>
-										<Text style={styles.infoLabel}>Project Name</Text>
-										<Text style={styles.infoValue}>{project?.Name || '-'}</Text>
-									</View>
-								</View>
-								<View style={styles.infoItem}>
-									<View style={styles.infoIconWrapper}>
-										<MaterialCommunityIcons name='lock-outline' size={16} color='#6b7280' />
-									</View>
-									<View>
-										<Text style={styles.infoLabel}>Type of Funding</Text>
-										<Text style={styles.infoValue}>{project?.TypeOfFundingText || '-'}</Text>
-									</View>
-								</View>
-								<View style={styles.infoItem}>
-									<View style={styles.infoIconWrapper}>
-										<Feather name='calendar' size={14} color='#6b7280' />
-									</View>
-									<View>
-										<Text style={styles.infoLabel}>Start Year</Text>
-										<Text style={styles.infoValue}>{formatDate(project?.StartYear)}</Text>
-									</View>
-								</View>
-								<View style={styles.infoItem}>
-									<View style={styles.infoIconWrapper}>
-										<Feather name='calendar' size={14} color='#6b7280' />
-									</View>
-									<View>
-										<Text style={styles.infoLabel}>Financial Year</Text>
-										<Text style={styles.infoValue}>{project?.FinancialYearName || '-'}</Text>
-									</View>
-								</View>
-								<View style={styles.infoItem}>
-									<View style={styles.infoIconWrapper}>
-										<MaterialCommunityIcons
-											name='office-building-outline'
-											size={16}
-											color='#6b7280'
-										/>
-									</View>
-									<View>
-										<Text style={styles.infoLabel}>Authorised Department</Text>
-										<Text style={styles.infoValue}>{project?.AuthorisedDepartmentName || '-'}</Text>
-									</View>
-								</View>
-								<View style={styles.infoItem}>
-									<View style={styles.infoIconWrapper}>
-										<Feather name='clock' size={14} color='#6b7280' />
-									</View>
-									<View>
-										<Text style={styles.infoLabel}>Created On</Text>
-										<Text style={styles.infoValue}>{formatDate(project?.CreatedOn)}</Text>
-									</View>
-								</View>
-							</View>
-						</View>
-
-						{/* Sanction Orders */}
-						<View style={styles.sectionCard}>
-							<View style={styles.sectionHeader}>
-								<View style={[styles.sectionIconBox, { backgroundColor: '#f97316' }]}>
-									<Feather name='file-text' size={16} color='#fff' />
-								</View>
-								<View>
-									<Text style={styles.sectionTitle}>Sanction Orders</Text>
-									<Text style={styles.sectionSubtitle}>Order details and documents</Text>
-								</View>
-							</View>
-
-							{sanctionOrdersCount === 0 ? (
-								<View style={styles.emptyStateBox}>
-									<View style={styles.emptyStateIconWrapper}>
-										<Feather name='file-text' size={28} color='#9ca3af' />
-										<View style={styles.checkBadge}>
-											<Feather name='check' size={10} color='#fff' />
-										</View>
-									</View>
-									<Text style={styles.emptyStateTitle}>No sanction orders</Text>
-									<Text style={styles.emptyStateSubtitle}>
-										Sanction orders will appear here once added
-									</Text>
-								</View>
-							) : (
-								<View style={{ padding: 20 }}>
-									<Text style={{ color: '#6b7280' }}>Sanction orders exist but UI is pending.</Text>
-								</View>
-							)}
 						</View>
 					</View>
 
-					{/* Right Column */}
-					<View style={styles.rightColumn}>
-						{/* Quick Info */}
-						<View style={styles.sectionCard}>
-							<View style={styles.sectionHeader}>
-								<View style={[styles.sectionIconBox, { backgroundColor: '#f97316' }]}>
-									<Feather name='briefcase' size={16} color='#fff' />
+					{/* Project Information */}
+					<View style={styles.infoSection}>
+						<Text style={styles.sectionTitle}>General Information</Text>
+						<View style={styles.infoCard}>
+							<View style={styles.infoRow}>
+								<View style={styles.infoCell}>
+									<Text style={styles.infoLabel}>Funding Type</Text>
+									<Text style={styles.infoText}>{project?.TypeOfFundingText || '-'}</Text>
 								</View>
-								<View>
-									<Text style={styles.sectionTitle}>Quick Info</Text>
-									<Text style={styles.sectionSubtitle}>Project summary</Text>
-								</View>
-							</View>
-
-							<View style={styles.quickInfoList}>
-								<View style={styles.quickInfoItem}>
-									<Text style={styles.quickInfoLabel}>Project Type</Text>
-									<Text style={styles.quickInfoValue}>N/A</Text>
-								</View>
-								<View style={styles.quickInfoItem}>
-									<Text style={styles.quickInfoLabel}>Start Date</Text>
-									<Text style={styles.quickInfoValue}>N/A</Text>
-								</View>
-								<View style={[styles.quickInfoItem, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-									<Text style={styles.quickInfoLabel}>Total Orders</Text>
-									<Text style={styles.quickInfoValue}>{sanctionOrdersCount}</Text>
-								</View>
-							</View>
-						</View>
-
-						{/* Status / Budget Widget */}
-						<View style={styles.statusWidget}>
-							<View style={styles.statusRow}>
-								<View style={styles.statusIconBox}>
-									<Feather name='activity' size={18} color='#fff' />
-								</View>
-								<View style={{ marginLeft: 12 }}>
-									<Text style={styles.statusLabelText}>STATUS</Text>
-									<Text style={styles.statusValueText}>
-										{project?.IsActive !== false ? 'Active' : 'Inactive'}
-									</Text>
+								<View style={styles.infoCell}>
+									<Text style={styles.infoLabel}>Start Year</Text>
+									<Text style={styles.infoText}>{formatDate(project?.StartYear)}</Text>
 								</View>
 							</View>
 							<View style={styles.divider} />
-							<View style={styles.budgetRow}>
-								<Text style={styles.budgetLabel}>TOTAL BUDGET</Text>
-								<Text style={styles.budgetValue}>{formatCurrency(project?.TotalBudget)}</Text>
+							<View style={styles.infoRow}>
+								<View style={styles.infoCell}>
+									<Text style={styles.infoLabel}>Authorised Department</Text>
+									<Text style={styles.infoText}>{project?.AuthorisedDepartmentName || '-'}</Text>
+								</View>
+							</View>
+							<View style={styles.divider} />
+							<View style={styles.infoRow}>
+								<View style={styles.infoCell}>
+									<Text style={styles.infoLabel}>Created On</Text>
+									<Text style={styles.infoText}>{formatDate(project?.CreatedOn)}</Text>
+								</View>
+								<View style={styles.infoCell}>
+									<Text style={styles.infoLabel}>Status</Text>
+									<View style={[styles.statusTag, { backgroundColor: project?.IsActive !== false ? '#dcfce7' : '#fee2e2' }]}>
+										<Text style={[styles.statusTagText, { color: project?.IsActive !== false ? '#15803d' : '#b91c1c' }]}>
+											{project?.IsActive !== false ? 'Active' : 'Inactive'}
+										</Text>
+									</View>
+								</View>
 							</View>
 						</View>
 					</View>
+
+					{/* Budget Highlight */}
+					<LinearGradient
+						colors={['#c1272d', '#8b1a1a']}
+						style={styles.budgetCard}
+						start={{ x: 0, y: 0 }}
+						end={{ x: 1, y: 0 }}
+					>
+						<View>
+							<Text style={styles.budgetLabel}>Total Allocated Budget</Text>
+							<Text style={styles.budgetValue}>{formatCurrency(project?.TotalBudget)}</Text>
+						</View>
+						<View style={styles.budgetIconCircle}>
+							<MaterialIcons name='account-balance-wallet' size={24} color='#fff' />
+						</View>
+					</LinearGradient>
+
+					{/* Sanction Orders Section */}
+					<View style={styles.orderSection}>
+						<View style={styles.sectionHeaderRow}>
+							<Text style={styles.sectionTitle}>Sanction Orders</Text>
+							<View style={styles.countBadge}>
+								<Text style={styles.countBadgeText}>{sanctionOrdersCount}</Text>
+							</View>
+						</View>
+
+						{sanctionOrdersCount === 0 ? (
+							<View style={styles.emptyState}>
+								<MaterialCommunityIcons name='file-search-outline' size={48} color='#cbd5e1' />
+								<Text style={styles.emptyStateText}>No sanction orders available</Text>
+							</View>
+						) : (
+							project?.SanctionOrders?.map((order, index) => (
+								<TouchableOpacity key={index} style={styles.orderCard} activeOpacity={0.7}>
+									<View style={styles.orderHeader}>
+										<Text style={styles.orderNumber}>{order.SanctionOrderNumber || `Order #${index + 1}`}</Text>
+										<Text style={styles.orderDate}>{formatDate(order.SanctionDate)}</Text>
+									</View>
+									<Text style={styles.orderAmount}>{formatCurrency(order.SanctionAmount)}</Text>
+								</TouchableOpacity>
+							))
+						)}
+					</View>
 				</View>
+				<View style={{ height: 40 }} />
 			</ScrollView>
-		</SafeAreaView>
+		</View>
 	);
 };
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#eef1f5',
+		backgroundColor: '#f8fafc',
 	},
 	mainScrollView: {
 		flex: 1,
-		padding: isMobile ? 12 : 24,
 	},
-	headerCard: {
-		backgroundColor: '#fff',
-		borderRadius: 12,
-		padding: 16,
+	headerGradient: {
+		paddingBottom: 24,
+		borderBottomLeftRadius: 32,
+		borderBottomRightRadius: 32,
+	},
+	headerContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 20,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.05,
-		shadowRadius: 2,
-		elevation: 2,
+		paddingHorizontal: 20,
+		paddingTop: isMobile ? 12 : 20,
 	},
 	backButton: {
-		width: 36,
-		height: 36,
-		borderRadius: 18,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		width: 44,
+		height: 44,
+		borderRadius: 22,
+		backgroundColor: 'rgba(255, 255, 255, 0.2)',
 		justifyContent: 'center',
 		alignItems: 'center',
 		marginRight: 16,
 	},
-	headerIconBox: {
-		backgroundColor: '#dc2626',
-		width: 44,
-		height: 44,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginRight: 12,
+	headerTitleContainer: {
+		flex: 1,
 	},
 	headerTitle: {
-		fontSize: 18,
-		fontWeight: 'bold',
-		color: '#111827',
-		marginBottom: 4,
-	},
-	headerSubtitleRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	headerSubtitle: {
-		fontSize: 12,
-		color: '#6b7280',
-		marginLeft: 4,
-	},
-	statsRow: {
-		gap: 20,
-		marginBottom: 20,
-	},
-	statCard: {
-		flex: 1,
-		backgroundColor: '#fff',
-		borderRadius: 12,
-		padding: 20,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.05,
-		shadowRadius: 2,
-		elevation: 2,
-	},
-	statIconRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'flex-start',
-		marginBottom: 16,
-	},
-	statIconBox: {
-		width: 40,
-		height: 40,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	statValueBox: {
-		alignItems: 'flex-end',
-	},
-	statValueBoxRow: {
-		flexDirection: 'column',
-		alignItems: 'flex-end',
-	},
-	statValueDark: {
 		fontSize: 22,
 		fontWeight: 'bold',
-		color: '#b91c1c',
+		color: '#fff',
+		marginBottom: 6,
 	},
-	statValueGreen: {
-		fontSize: 22,
-		fontWeight: 'bold',
-		color: '#16a34a',
-	},
-	statUnit: {
-		fontSize: 12,
-		color: '#9ca3af',
-		marginTop: -4,
-	},
-	statTitle: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: '#374151',
-		marginBottom: 4,
-	},
-	statSubtitle: {
-		fontSize: 12,
-		color: '#9ca3af',
-	},
-	contentRow: {
-		gap: 20,
-		marginBottom: 40,
-	},
-	leftColumn: {
-		flex: 2.2,
-		gap: 20,
-	},
-	rightColumn: {
-		flex: 1,
-		gap: 20,
-	},
-	sectionCard: {
-		backgroundColor: '#fff',
-		borderRadius: 12,
-		padding: 20,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.05,
-		shadowRadius: 2,
-		elevation: 2,
-	},
-	sectionHeader: {
+	headerBadge: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 20,
-	},
-	sectionIconBox: {
-		width: 36,
-		height: 36,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginRight: 12,
-	},
-	sectionTitle: {
-		fontSize: 15,
-		fontWeight: 'bold',
-		color: '#111827',
-	},
-	sectionSubtitle: {
-		fontSize: 12,
-		color: '#6b7280',
-		marginTop: 2,
-	},
-	infoGrid: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		marginHorizontal: -10,
-	},
-	infoItem: {
-		width: isMobile ? '100%' : '50%',
+		backgroundColor: 'rgba(255, 255, 255, 0.15)',
 		paddingHorizontal: 10,
-		flexDirection: 'row',
-		alignItems: 'flex-start',
-		marginBottom: 24,
+		paddingVertical: 4,
+		borderRadius: 12,
+		alignSelf: 'flex-start',
 	},
-	infoIconWrapper: {
-		width: 28,
-		height: 28,
-		backgroundColor: '#f3f4f6',
-		borderRadius: 4,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginRight: 12,
-		marginTop: 2,
-	},
-	hashIcon: {
-		fontSize: 14,
-		fontWeight: 'bold',
-		color: '#6b7280',
-	},
-	infoLabel: {
+	headerBadgeText: {
 		fontSize: 12,
-		color: '#6b7280',
-		marginBottom: 4,
-	},
-	infoValue: {
-		fontSize: 14,
-		color: '#111827',
+		color: '#fff',
+		marginLeft: 6,
 		fontWeight: '500',
 	},
-	emptyStateBox: {
-		paddingVertical: 40,
-		alignItems: 'center',
-		justifyContent: 'center',
+	contentContainer: {
+		paddingHorizontal: 20,
+		marginTop: -20,
 	},
-	emptyStateIconWrapper: {
-		width: 60,
-		height: 60,
-		backgroundColor: '#f3f4f6',
-		borderRadius: 30,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginBottom: 16,
-		position: 'relative',
+	statsRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		marginBottom: 24,
 	},
-	checkBadge: {
-		position: 'absolute',
-		bottom: 12,
-		right: 12,
-		backgroundColor: '#9ca3af',
-		width: 16,
-		height: 16,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 2,
-		borderColor: '#f3f4f6',
-	},
-	emptyStateTitle: {
-		fontSize: 15,
-		fontWeight: 'bold',
-		color: '#374151',
-		marginBottom: 4,
-	},
-	emptyStateSubtitle: {
-		fontSize: 13,
-		color: '#9ca3af',
-		textAlign: 'center',
-	},
-	quickInfoList: {
-		borderWidth: 1,
-		borderColor: '#f3f4f6',
-		borderRadius: 8,
-		padding: 16,
-	},
-	quickInfoItem: {
-		flexDirection: 'column',
-		borderBottomWidth: 1,
-		borderBottomColor: '#f3f4f6',
-		paddingVertical: 12,
-		paddingHorizontal: 4,
-	},
-	quickInfoLabel: {
-		fontSize: 12,
-		color: '#6b7280',
-		marginBottom: 4,
-	},
-	quickInfoValue: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: '#111827',
-	},
-	statusWidget: {
-		backgroundColor: '#dc2626', // Red baseline
-		borderRadius: 12,
-		padding: 20,
-		shadowColor: '#dc2626',
-		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.3,
-		shadowRadius: 8,
-		elevation: 6,
-	},
-	statusRow: {
+	statItem: {
+		flex: 1,
+		padding: 10,
+		borderRadius: 16,
+		marginHorizontal: 3,
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 16,
+		elevation: 2,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
 	},
-	statusIconBox: {
-		width: 40,
-		height: 40,
-		backgroundColor: 'rgba(255, 255, 255, 0.2)',
+	statIconBox: {
+		width: 30,
+		height: 30,
 		borderRadius: 10,
 		justifyContent: 'center',
 		alignItems: 'center',
+		marginRight: 8,
 	},
-	statusLabelText: {
-		fontSize: 11,
+	statLabel: {
+		fontSize: 9,
+		color: '#64748b',
+		textTransform: 'uppercase',
+		fontWeight: '600',
+	},
+	statValue: {
+		fontSize: 12,
 		fontWeight: 'bold',
-		color: 'rgba(255, 255, 255, 0.8)',
-		letterSpacing: 0.5,
+		color: '#1e293b',
 	},
-	statusValueText: {
+	infoSection: {
+		marginBottom: 24,
+	},
+	sectionTitle: {
 		fontSize: 18,
 		fontWeight: 'bold',
-		color: '#ffffff',
-		marginTop: 2,
+		color: '#1e293b',
+		marginBottom: 12,
+		marginLeft: 4,
+	},
+	infoCard: {
+		backgroundColor: '#fff',
+		borderRadius: 24,
+		padding: 20,
+		elevation: 3,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.06,
+		shadowRadius: 8,
+	},
+	infoRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		marginVertical: 10,
+	},
+	infoCell: {
+		flex: 1,
+	},
+	infoLabel: {
+		fontSize: 12,
+		color: '#94a3b8',
+		marginBottom: 4,
+	},
+	infoText: {
+		fontSize: 15,
+		color: '#334155',
+		fontWeight: '500',
 	},
 	divider: {
 		height: 1,
-		backgroundColor: 'rgba(255, 255, 255, 0.2)',
-		marginBottom: 16,
+		backgroundColor: '#f1f5f9',
+		marginVertical: 4,
 	},
-	budgetRow: {
-		flexDirection: 'column',
+	statusTag: {
+		alignSelf: 'flex-start',
+		paddingHorizontal: 12,
+		paddingVertical: 4,
+		borderRadius: 8,
+		marginTop: 2,
+	},
+	statusTagText: {
+		fontSize: 12,
+		fontWeight: 'bold',
+		textTransform: 'uppercase',
+	},
+	budgetCard: {
+		borderRadius: 24,
+		padding: 24,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		marginBottom: 32,
+		elevation: 5,
+		shadowColor: '#c1272d',
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.2,
+		shadowRadius: 12,
 	},
 	budgetLabel: {
-		fontSize: 11,
-		fontWeight: 'bold',
+		fontSize: 13,
 		color: 'rgba(255, 255, 255, 0.8)',
-		letterSpacing: 0.5,
 		marginBottom: 4,
+		fontWeight: '600',
 	},
 	budgetValue: {
-		fontSize: 24,
+		fontSize: 28,
 		fontWeight: 'bold',
-		color: '#ffffff',
+		color: '#fff',
+	},
+	budgetIconCircle: {
+		width: 48,
+		height: 48,
+		borderRadius: 24,
+		backgroundColor: 'rgba(255, 255, 255, 0.2)',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	orderSection: {
+		marginBottom: 20,
+	},
+	sectionHeaderRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 12,
+		marginLeft: 4,
+	},
+	countBadge: {
+		backgroundColor: '#e2e8f0',
+		paddingHorizontal: 8,
+		paddingVertical: 2,
+		borderRadius: 12,
+		marginLeft: 10,
+	},
+	countBadgeText: {
+		fontSize: 12,
+		fontWeight: 'bold',
+		color: '#475569',
+	},
+	orderCard: {
+		backgroundColor: '#fff',
+		borderRadius: 16,
+		padding: 16,
+		marginBottom: 12,
+		borderLeftWidth: 4,
+		borderLeftColor: '#ef4444',
+		elevation: 2,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.04,
+		shadowRadius: 4,
+	},
+	orderHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	orderNumber: {
+		fontSize: 14,
+		fontWeight: 'bold',
+		color: '#1e293b',
+	},
+	orderDate: {
+		fontSize: 12,
+		color: '#94a3b8',
+	},
+	orderAmount: {
+		fontSize: 18,
+		fontWeight: 'bold',
+		color: '#dc2626',
+	},
+	emptyState: {
+		backgroundColor: '#f8fafc',
+		borderRadius: 24,
+		padding: 40,
+		alignItems: 'center',
+		borderWidth: 2,
+		borderColor: '#f1f5f9',
+		borderStyle: 'dashed',
+	},
+	emptyStateText: {
+		marginTop: 12,
+		fontSize: 14,
+		color: '#94a3b8',
+		textAlign: 'center',
 	},
 });
 

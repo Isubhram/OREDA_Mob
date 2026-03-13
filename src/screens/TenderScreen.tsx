@@ -90,7 +90,7 @@ const TenderScreen = ({ navigation }: any) => {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
             <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
@@ -129,9 +129,9 @@ const TenderScreen = ({ navigation }: any) => {
                             <TouchableOpacity style={styles.toggleBtnActive}>
                                 <MaterialIcons name='format-list-bulleted' size={18} color='#fff' />
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.toggleBtnInactive}>
+                            {/* <TouchableOpacity style={styles.toggleBtnInactive}>
                                 <MaterialIcons name='grid-view' size={18} color='#6b7280' />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </View>
                     </View>
 
@@ -159,9 +159,6 @@ const TenderScreen = ({ navigation }: any) => {
                                     <View style={[styles.col, { width: 150 }]}>
                                         <Text style={styles.tableHeaderText}>End Date</Text>
                                     </View>
-                                    <View style={[styles.col, { width: 120 }]}>
-                                        <Text style={styles.tableHeaderText}>Action</Text>
-                                    </View>
                                 </View>
 
                                 {/* Table Rows */}
@@ -171,7 +168,13 @@ const TenderScreen = ({ navigation }: any) => {
                                             <Text style={styles.cellTextDark}>{index + 1}</Text>
                                         </View>
                                         <View style={[styles.col, { width: 160 }]}>
-                                            <Text style={styles.cellTextDark}>{tender.TenderNumber}</Text>
+                                            <TouchableOpacity
+                                                onPress={() => navigation?.navigate('TenderDetails', { tenderId: tender.Id })}
+                                            >
+                                                <Text style={[styles.cellTextDark, { color: '#dc2626', textDecorationLine: 'underline' }]}>
+                                                    {tender.TenderNumber}
+                                                </Text>
+                                            </TouchableOpacity>
                                         </View>
                                         <View style={[styles.col, { width: 250 }]}>
                                             <Text style={styles.cellTextDark} numberOfLines={2}>
@@ -183,14 +186,6 @@ const TenderScreen = ({ navigation }: any) => {
                                         </View>
                                         <View style={[styles.col, { width: 150 }]}>
                                             <Text style={styles.cellTextGray}>{formatDate(tender.TenderEndDate)}</Text>
-                                        </View>
-                                        <View style={[styles.col, { width: 120, flexDirection: 'row', gap: 8 }]}>
-                                            <TouchableOpacity
-                                                style={styles.actionBtnView}
-                                                onPress={() => navigation?.navigate('TenderDetails', { tenderId: tender.Id })}
-                                            >
-                                                <Feather name='eye' size={14} color='#dc2626' />
-                                            </TouchableOpacity>
                                         </View>
                                     </View>
                                 ))}
@@ -215,7 +210,11 @@ const TenderScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#eef1f5' },
     scrollView: { flex: 1 },
-    scrollContent: { padding: isMobile ? 8 : 16, paddingBottom: 24 },
+    scrollContent: { 
+        paddingHorizontal: isMobile ? 12 : 16, 
+        paddingBottom: 24,
+        paddingTop: 8
+    },
     loadingContainer: { flex: 1, justifyContent: 'center', paddingHorizontal: 16 },
     errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
     errorText: { fontSize: 16, color: '#dc2626', textAlign: 'center', marginBottom: 20 },

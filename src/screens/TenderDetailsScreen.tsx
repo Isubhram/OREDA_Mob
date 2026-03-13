@@ -161,19 +161,26 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
         return true;
     };
 
+    // File Source Modal State
+    const [isFileSourceVisible, setIsFileSourceVisible] = useState(false);
+    const [onFileSourceSelected, setOnFileSourceSelected] = useState<(asset: any) => void>(() => () => { });
+    const [allowSourceDocuments, setAllowSourceDocuments] = useState(false);
+
     const handleTakePhoto = async (onFileSelected: (asset: any) => void) => {
         const hasPermission = await requestCameraPermission();
         if (!hasPermission) return;
 
         try {
+            console.log('Launching camera...');
             const result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                quality: 1,
+                allowsEditing: false, // Disabled to fix capture issues
+                quality: 0.8,
             });
 
             if (!result.canceled) {
                 const asset = result.assets[0];
+                console.log('Camera Asset Selected:', asset);
                 onFileSelected({
                     uri: asset.uri,
                     name: asset.fileName || `photo_${Date.now()}.jpg`,
@@ -189,14 +196,16 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
     const handlePickFromGallery = async (onFileSelected: (asset: any) => void) => {
         try {
+            console.log('Launching gallery...');
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                quality: 1,
+                allowsEditing: false, // Disabled for reliability
+                quality: 0.8,
             });
 
             if (!result.canceled) {
                 const asset = result.assets[0];
+                console.log('Gallery Asset Selected:', asset);
                 onFileSelected({
                     uri: asset.uri,
                     name: asset.fileName || `image_${Date.now()}.jpg`,
@@ -211,38 +220,9 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
     };
 
     const handleAddFileChoice = (onFileSelected: (asset: any) => void, allowDocuments = false) => {
-        const options = [
-            { text: 'Take Photo', onPress: () => handleTakePhoto(onFileSelected) },
-            { text: 'Choose from Gallery', onPress: () => handlePickFromGallery(onFileSelected) },
-        ];
-
-        if (allowDocuments) {
-            options.push({
-                text: 'Select Document',
-                onPress: async () => {
-                    try {
-                        const result = await DocumentPicker.getDocumentAsync({
-                            type: ['application/pdf', 'image/*'],
-                            copyToCacheDirectory: true,
-                        });
-                        if (!result.canceled) {
-                            onFileSelected(result.assets[0]);
-                        }
-                    } catch (err) {
-                        console.error('Error picking document:', err);
-                        Alert.alert('Error', 'Failed to pick document');
-                    }
-                }
-            });
-        }
-
-        options.push({ text: 'Cancel', style: 'cancel' } as any);
-
-        Alert.alert(
-            'Select Source',
-            'Choose how you want to add the file',
-            options as any
-        );
+        setOnFileSourceSelected(() => onFileSelected);
+        setAllowSourceDocuments(allowDocuments);
+        setIsFileSourceVisible(true);
     };
 
     const handleUploadBG = async (wo: WorkOrder) => {
@@ -720,49 +700,68 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                             <Text style={styles.woInfoValue}>{wo.BGValuePercentage}%</Text>
                                                         </View>
                                                     </View>
-                                                    <TouchableOpacity
-                                                        style={styles.btnUploadMaterial}
-                                                        onPress={() => {
-                                                            setSelectedWorkOrder(wo);
-                                                            // Auto-select first asset if available
-                                                            if (wo.Assets && wo.Assets.length > 0) {
-                                                                const asset = wo.Assets[0];
-                                                                // Always prioritize AssetId, then Id as fallback
-                                                                setMaterialAssetId(asset.AssetId || asset.Id || 0);
 
-                                                                if (asset.AssetType && asset.AssetType.length > 0) {
-                                                                    const assetType = asset.AssetType[0];
-                                                                    setMaterialAssetTypeId(assetType.Id || 0);
-                                                                    if (assetType.AssetSubType && assetType.AssetSubType.length > 0) {
-                                                                        setMaterialAssetSubTypeId(assetType.AssetSubType[0].Id || 0);
+                                                    {wo.Documents && wo.Documents.length > 0 ? (
+                                                        <View style={styles.uploadedDocsContainer}>
+                                                            <View style={styles.uploadedDocsHeader}>
+                                                                <Feather name="check-circle" size={14} color="#059669" />
+                                                                <Text style={styles.uploadedDocsTitle}>Uploaded Raw Materials</Text>
+                                                            </View>
+                                                            {wo.Documents.map((doc, dIdx) => (
+                                                                <View key={dIdx} style={styles.uploadedDocItem}>
+                                                                    <MaterialIcons name="insert-drive-file" size={16} color="#059669" />
+                                                                    <Text style={styles.uploadedDocName} numberOfLines={1}>{doc.FileName}</Text>
+                                                                    <TouchableOpacity onPress={() => Alert.alert('Info', 'View file functionality')}>
+                                                                        <Feather name="eye" size={14} color="#6b7280" />
+                                                                    </TouchableOpacity>
+                                                                </View>
+                                                            ))}
+                                                        </View>
+                                                    ) : null}
+
+                                                    <View style={styles.woActionRow}>
+                                                        {!wo.Documents || wo.Documents.length === 0 ? (
+                                                            <TouchableOpacity
+                                                                style={styles.btnActionSecondary}
+                                                                onPress={() => {
+                                                                    setSelectedWorkOrder(wo);
+                                                                    // Auto-select first asset if available
+                                                                    if (wo.Assets && wo.Assets.length > 0) {
+                                                                        const asset = wo.Assets[0];
+                                                                        setMaterialAssetId(asset.AssetId || asset.Id || 0);
+
+                                                                        if (asset.AssetType && asset.AssetType.length > 0) {
+                                                                            const assetType = asset.AssetType[0];
+                                                                            setMaterialAssetTypeId(assetType.Id || 0);
+                                                                            if (assetType.AssetSubType && assetType.AssetSubType.length > 0) {
+                                                                                setMaterialAssetSubTypeId(assetType.AssetSubType[0].Id || 0);
+                                                                            } else {
+                                                                                setMaterialAssetSubTypeId(0);
+                                                                            }
+                                                                        } else {
+                                                                            setMaterialAssetTypeId(0);
+                                                                            setMaterialAssetSubTypeId(0);
+                                                                        }
                                                                     } else {
+                                                                        setMaterialAssetId(0);
+                                                                        setMaterialAssetTypeId(0);
                                                                         setMaterialAssetSubTypeId(0);
                                                                     }
-                                                                } else {
-                                                                    setMaterialAssetTypeId(0);
-                                                                    setMaterialAssetSubTypeId(0);
-                                                                }
-                                                            } else {
-                                                                setMaterialAssetId(0);
-                                                                setMaterialAssetTypeId(0);
-                                                                setMaterialAssetSubTypeId(0);
-                                                            }
-                                                            setIsMaterialModalVisible(true);
-                                                        }}
-                                                    >
-                                                        <Feather name="package" size={16} color="#059669" />
-                                                        <Text style={styles.btnUploadMaterialText}> Upload Raw material</Text>
-                                                    </TouchableOpacity>
-                                                    <View style={styles.woActionsContainer}>
+                                                                    setIsMaterialModalVisible(true);
+                                                                }}
+                                                            >
+                                                                <Feather name="package" size={14} color="#059669" />
+                                                                <Text style={styles.btnActionSecondaryText}> Upload Raw Material</Text>
+                                                            </TouchableOpacity>
+                                                        ) : null}
+
                                                         <TouchableOpacity
-                                                            style={styles.btnFillForm}
-                                                            onPress={() => handleFillForm(wo)}
+                                                            style={styles.btnActionPrimary}
+                                                                onPress={() => handleFillForm(wo)}
                                                         >
-                                                            <MaterialCommunityIcons name="file-document-edit-outline" size={18} color="#fff" />
-                                                            <Text style={styles.btnFillFormText}> Fill the Form</Text>
+                                                            <MaterialCommunityIcons name="file-document-edit-outline" size={16} color="#fff" />
+                                                            <Text style={styles.btnActionPrimaryText}> Fill the Form</Text>
                                                         </TouchableOpacity>
-
-
                                                     </View>
 
                                                     <TouchableOpacity
@@ -1084,28 +1083,25 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                         </View>
 
                         <View style={styles.modalFooter}>
-                            {currentStep > 0 && (
-                                <TouchableOpacity
-                                    style={styles.btnCancel}
-                                    onPress={() => setCurrentStep(currentStep - 1)}
-                                >
-                                    <Text style={styles.btnCancelText}>Previous</Text>
-                                </TouchableOpacity>
-                            )}
-                            <TouchableOpacity
-                                style={styles.btnCancel}
-                                onPress={() => setIsFormModalVisible(false)}
-                            >
-                                <Text style={styles.btnCancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.btnSaveNext}
-                                onPress={handleNextStep}
-                            >
-                                <Text style={styles.btnSaveNextText}>{currentStep === 6 ? 'Submit ' : 'Save & Next '}</Text>
-                                <Feather name={currentStep === 6 ? 'check' : 'arrow-right'} size={16} color="#fff" />
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                            style={styles.btnBackArrow}
+                            onPress={() => currentStep > 0 && setCurrentStep(currentStep - 1)}
+                            disabled={currentStep === 0}
+                        >
+                            <Feather name="arrow-left" size={20} color={currentStep === 0 ? "#d1d5db" : "#fff"} />
+                        </TouchableOpacity>
+                        <View style={{ flex: 1 }} />
+                        <TouchableOpacity
+                            style={styles.btnCancel}
+                            onPress={() => setIsFormModalVisible(false)}
+                        >
+                            <Text style={styles.btnCancelText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.btnSaveNext} onPress={handleNextStep}>
+                            <Text style={styles.btnSaveNextText}>{currentStep === 6 ? 'Submit Form' : 'Save & Next'}</Text>
+                            <Feather name={currentStep === 6 ? "check" : "chevron-right"} size={16} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
                     </View>
                 </View>
             </Modal>
@@ -1120,83 +1116,56 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <View style={styles.modalTitleRow}>
-                                <View style={styles.modalIconBoxGreen}>
-                                    <Feather name="package" size={20} color="#fff" />
+                                <View style={styles.modalHeaderIcon}>
+                                    <Feather name="package" size={24} color="#fff" />
                                 </View>
                                 <View>
                                     <Text style={styles.modalTitle}>Upload Raw Material</Text>
-                                    <Text style={styles.modalSubtitle}>WO: {selectedWorkOrder?.WONumber || 'N/A'}</Text>
+                                    <Text style={styles.modalSubtitle}>Work Order: {selectedWorkOrder?.WONumber}</Text>
                                 </View>
                             </View>
-                            <TouchableOpacity onPress={() => setIsMaterialModalVisible(false)}>
-                                <Feather name="x" size={24} color="#6b7280" />
-                            </TouchableOpacity>
-                        </View>
 
-                        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                            <View style={styles.materialForm}>
-                                {/* Asset Selection (Visual representation for now) */}
-                                {selectedWorkOrder?.Assets && selectedWorkOrder.Assets.length > 0 && (
-                                    <View style={{ gap: 12 }}>
-                                        <View style={styles.formField}>
-                                            <Text style={styles.formLabel}>Select Asset</Text>
-                                            <TouchableOpacity
-                                                style={styles.dropdownTrigger}
-                                                onPress={() => {
-                                                    if (!selectedWorkOrder?.Assets) return;
-                                                    const data = selectedWorkOrder.Assets.map(a => ({ Id: a.AssetId, Name: a.AssetName }));
-                                                    setSelectionData(data);
-                                                    setSelectionTitle('Select Asset');
-                                                    setSelectionKey('materialAssetId');
-                                                    // Custom handler needed for this specific state
-                                                    Alert.alert(
-                                                        'Select Asset',
-                                                        'Choose an asset:',
-                                                        [
-                                                            ...data.map(item => ({
-                                                                text: item.Name,
-                                                                onPress: () => {
-                                                                    setMaterialAssetId(item.Id);
-                                                                    if (!selectedWorkOrder) return;
-                                                                    const asset = selectedWorkOrder.Assets.find(a => a.AssetId === item.Id);
-                                                                    if (asset?.AssetType?.[0]) {
-                                                                        setMaterialAssetTypeId(asset.AssetType[0].Id);
-                                                                        if (asset.AssetType[0].AssetSubType?.[0]) {
-                                                                            setMaterialAssetSubTypeId(asset.AssetType[0].AssetSubType[0].Id);
-                                                                        }
-                                                                    }
-                                                                }
-                                                            })),
-                                                            { text: 'Cancel', style: 'cancel' }
-                                                        ]
-                                                    );
-                                                }}
-                                            >
-                                                <Text style={styles.dropdownValue}>
-                                                    {selectedWorkOrder?.Assets?.find(a => a.AssetId === materialAssetId)?.AssetName || 'Select Asset'}
+                            <View style={styles.modalBody}>
+                                <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
+                                    <View style={styles.materialForm}>
+                                        <View style={styles.fieldContainer}>
+                                            <View style={styles.fieldLabelRow}>
+                                                <Text style={styles.fieldLabel}>SELECTED ASSET</Text>
+                                            </View>
+                                            <View style={styles.fieldValueBox}>
+                                                <View style={styles.fieldIconBox}>
+                                                    <Feather name="cpu" size={16} color="#3b82f6" />
+                                                </View>
+                                                <Text style={styles.fieldValueText}>
+                                                    {selectedWorkOrder?.Assets?.[0]?.AssetName || 'No asset selected'}
                                                 </Text>
-                                                <MaterialCommunityIcons name="unfold-more-horizontal" size={20} color="#9ca3af" />
-                                            </TouchableOpacity>
+                                            </View>
                                         </View>
 
-                                        {/* File Selection */}
-                                        <View style={styles.formField}>
-                                            <Text style={styles.formLabel}>Material Files</Text>
-                                            <TouchableOpacity
-                                                style={styles.btnPickFiles}
-                                                onPress={pickMaterialFiles}
-                                            >
+                                        <View style={styles.fieldContainer}>
+                                            <View style={styles.fieldLabelRow}>
+                                                <Text style={styles.fieldLabel}>UPLOAD MATERIAL FILES</Text>
+                                            </View>
+                                            <TouchableOpacity style={styles.btnPickFiles} onPress={pickMaterialFiles}>
                                                 <Feather name="plus-circle" size={20} color="#6b7280" />
-                                                <Text style={styles.btnPickFilesText}>Add Files</Text>
+                                                <Text style={styles.btnPickFilesText}>Add Photos or Documents</Text>
                                             </TouchableOpacity>
 
                                             <View style={styles.fileList}>
                                                 {materialFiles.map((file, index) => (
                                                     <View key={index} style={styles.fileItem}>
-                                                        <Feather name="file" size={16} color="#4b5563" />
-                                                        <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
-                                                        <TouchableOpacity onPress={() => removeMaterialFile(index)}>
+                                                        {file.mimeType?.startsWith('image/') ? (
+                                                            <Image source={{ uri: file.uri }} style={styles.filePreview} />
+                                                        ) : (
+                                                            <View style={styles.fileIconBox}>
+                                                                <Feather name="file-text" size={16} color="#6b7280" />
+                                                            </View>
+                                                        )}
+                                                        <View style={{ flex: 1, marginLeft: 8 }}>
+                                                            <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+                                                            <Text style={styles.fileStatus}>Ready to upload</Text>
+                                                        </View>
+                                                        <TouchableOpacity onPress={() => removeMaterialFile(index)} style={styles.removeFileBtn}>
                                                             <Feather name="trash-2" size={16} color="#dc2626" />
                                                         </TouchableOpacity>
                                                     </View>
@@ -1204,9 +1173,8 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                             </View>
                                         </View>
                                     </View>
-                                )}
+                                </ScrollView>
                             </View>
-                        </ScrollView>
 
                         <View style={styles.modalFooter}>
                             <TouchableOpacity
@@ -1230,6 +1198,84 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                 )}
                             </TouchableOpacity>
                         </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* File Source Selection Modal */}
+            <Modal
+                visible={isFileSourceVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setIsFileSourceVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.selectionContentWide}>
+                        <View style={styles.selectionHeader}>
+                            <Text style={styles.selectionTitle}>Select File Source</Text>
+                            <TouchableOpacity onPress={() => setIsFileSourceVisible(false)}>
+                                <Feather name="x" size={20} color="#4b5563" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.sourceGrid}>
+                            <TouchableOpacity
+                                style={styles.sourceItem}
+                                onPress={() => {
+                                    setIsFileSourceVisible(false);
+                                    handleTakePhoto(onFileSourceSelected);
+                                }}
+                            >
+                                <View style={[styles.sourceIconBox, { backgroundColor: '#fee2e2' }]}>
+                                    <Feather name="camera" size={24} color="#dc2626" />
+                                </View>
+                                <Text style={styles.sourceText}>Camera</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.sourceItem}
+                                onPress={() => {
+                                    setIsFileSourceVisible(false);
+                                    handlePickFromGallery(onFileSourceSelected);
+                                }}
+                            >
+                                <View style={[styles.sourceIconBox, { backgroundColor: '#dbeafe' }]}>
+                                    <Feather name="image" size={24} color="#3b82f6" />
+                                </View>
+                                <Text style={styles.sourceText}>Gallery</Text>
+                            </TouchableOpacity>
+
+                            {allowSourceDocuments && (
+                                <TouchableOpacity
+                                    style={styles.sourceItem}
+                                    onPress={async () => {
+                                        setIsFileSourceVisible(false);
+                                        try {
+                                            const result = await DocumentPicker.getDocumentAsync({
+                                                type: ['application/pdf', 'image/*'],
+                                                copyToCacheDirectory: true,
+                                            });
+                                            if (!result.canceled) {
+                                                onFileSourceSelected(result.assets[0]);
+                                            }
+                                        } catch (err) {
+                                            console.error('Error picking document:', err);
+                                            Alert.alert('Error', 'Failed to pick document');
+                                        }
+                                    }}
+                                >
+                                    <View style={[styles.sourceIconBox, { backgroundColor: '#dcfce7' }]}>
+                                        <Feather name="file-text" size={24} color="#16a34a" />
+                                    </View>
+                                    <Text style={styles.sourceText}>Document</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                        <TouchableOpacity
+                            style={styles.sourceCancelBtn}
+                            onPress={() => setIsFileSourceVisible(false)}
+                        >
+                            <Text style={styles.sourceCancelText}>Cancel</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -1815,7 +1861,164 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginLeft: 8,
     },
-    // Selection Modal Styles
+    // Style refinements for Upload and Buttons
+    btnActionRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 8,
+    },
+    btnActionPrimary: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#3b82f6',
+        paddingVertical: 10,
+        borderRadius: 8,
+        gap: 6,
+    },
+    btnActionPrimaryText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    btnActionSecondary: {
+        flex: 1.2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#ecfdf5',
+        borderWidth: 1,
+        borderColor: '#10b981',
+        paddingVertical: 10,
+        borderRadius: 8,
+        gap: 6,
+    },
+    btnActionSecondaryText: {
+        color: '#059669',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    // Uploaded Documents in Work Order
+    uploadedDocsContainer: {
+        backgroundColor: '#f9fafb',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#f3f4f6',
+    },
+    uploadedDocsHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 10,
+    },
+    uploadedDocsTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#374151',
+    },
+    uploadedDocItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: 8,
+        borderRadius: 6,
+        marginBottom: 6,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        gap: 8,
+    },
+    uploadedDocName: {
+        flex: 1,
+        fontSize: 11,
+        color: '#4b5563',
+    },
+    // Back arrow for form
+    btnBackArrow: {
+        width: 40,
+        height: 40,
+        borderRadius: 8,
+        backgroundColor: '#c1272d',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    // File list refinements
+    filePreview: {
+        width: 40,
+        height: 40,
+        borderRadius: 4,
+        backgroundColor: '#f3f4f6',
+    },
+    fileIconBox: {
+        width: 40,
+        height: 40,
+        borderRadius: 4,
+        backgroundColor: '#f3f4f6',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fileStatus: {
+        fontSize: 10,
+        color: '#059669',
+        marginTop: 2,
+    },
+    removeFileBtn: {
+        padding: 8,
+    },
+    // Selection Wide Modal
+    selectionContentWide: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        width: '90%',
+        maxWidth: 400,
+        padding: 20,
+    },
+    sourceGrid: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 24,
+    },
+    sourceItem: {
+        alignItems: 'center',
+        gap: 12,
+    },
+    sourceIconBox: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    sourceText: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#4b5563',
+    },
+    sourceCancelBtn: {
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#f3f4f6',
+        marginTop: 8,
+    },
+    sourceCancelText: {
+        fontSize: 14,
+        color: '#6b7280',
+        fontWeight: '600',
+    },
+    woActionRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginBottom: 12,
+    },
+    // Selection Modal Styles (Restored)
     selectionOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',

@@ -140,7 +140,7 @@ const ProjectScreen = ({ navigation }: any) => {
 	}
 
 	return (
-		<SafeAreaView style={styles.container}>
+		<SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
 			<ScrollView
 				style={styles.mainScrollView}
 				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -223,9 +223,9 @@ const ProjectScreen = ({ navigation }: any) => {
 							<TouchableOpacity style={styles.toggleBtnActive}>
 								<MaterialIcons name='format-list-bulleted' size={18} color='#fff' />
 							</TouchableOpacity>
-							<TouchableOpacity style={styles.toggleBtnInactive}>
+							{/* <TouchableOpacity style={styles.toggleBtnInactive}>
 								<MaterialIcons name='grid-view' size={18} color='#6b7280' />
-							</TouchableOpacity>
+							</TouchableOpacity> */}
 						</View>
 					</View>
 
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
 	},
 	mainScrollView: {
 		flex: 1,
-		padding: isMobile ? 12 : 24,
+		paddingHorizontal: isMobile ? 12 : 24,
 	},
 	loadingContainer: {
 		flex: 1,
