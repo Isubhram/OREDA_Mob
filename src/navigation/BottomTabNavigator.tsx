@@ -7,6 +7,7 @@ import TenderScreen from '../screens/TenderScreen';
 import FAQScreen from '../screens/FAQScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type BottomTabParamList = {
     Dashboard: undefined;
@@ -18,6 +19,8 @@ export type BottomTabParamList = {
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const BottomTabNavigator = () => {
+    const insets = useSafeAreaInsets();
+
     return (
         <Tab.Navigator
             initialRouteName="Dashboard"
@@ -43,8 +46,8 @@ const BottomTabNavigator = () => {
                     backgroundColor: '#fff',
                     borderTopWidth: 1,
                     borderTopColor: '#e0e0e0',
-                    height: 60,
-                    paddingBottom: 8,
+                    height: 60 + insets.bottom,
+                    paddingBottom: insets.bottom || 8,
                     paddingTop: 8,
                 },
 

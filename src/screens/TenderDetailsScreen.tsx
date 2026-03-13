@@ -5,6 +5,7 @@ import { Feather, MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/
 import { tenderService, Tender, WorkOrder } from '../services/tenderService';
 import { projectAssetService, DropdownItem } from '../services/projectAssetService';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Modal, TextInput } from 'react-native';
 
@@ -151,36 +152,110 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
         }
     };
 
-    const handleUploadBG = async (wo: WorkOrder) => {
+    const requestCameraPermission = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'Camera access is required to take photos.');
+            return false;
+        }
+        return true;
+    };
+
+    const handleTakePhoto = async (onFileSelected: (asset: any) => void) => {
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) return;
+
         try {
-            const result = await DocumentPicker.getDocumentAsync({
-                type: ['application/pdf', 'image/*'],
-                copyToCacheDirectory: true,
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                quality: 1,
             });
 
             if (!result.canceled) {
-                Alert.alert('Success', `File ${result.assets[0].name} selected for WO: ${wo.WONumber}`);
-                // Here you would typically upload the file to your server
+                const asset = result.assets[0];
+                onFileSelected({
+                    uri: asset.uri,
+                    name: asset.fileName || `photo_${Date.now()}.jpg`,
+                    type: 'image/jpeg',
+                    mimeType: 'image/jpeg',
+                });
             }
         } catch (error) {
-            console.error('Error picking document:', error);
-            Alert.alert('Error', 'Failed to pick document');
+            console.error('Error taking photo:', error);
+            Alert.alert('Error', 'Failed to capture photo');
         }
     };
 
-    const pickMaterialFiles = async () => {
+    const handlePickFromGallery = async (onFileSelected: (asset: any) => void) => {
         try {
-            const result = await DocumentPicker.getDocumentAsync({
-                type: '*/*',
-                multiple: true,
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                quality: 1,
             });
 
             if (!result.canceled) {
-                setMaterialFiles(prev => [...prev, ...result.assets]);
+                const asset = result.assets[0];
+                onFileSelected({
+                    uri: asset.uri,
+                    name: asset.fileName || `image_${Date.now()}.jpg`,
+                    type: 'image/jpeg',
+                    mimeType: 'image/jpeg',
+                });
             }
         } catch (error) {
-            console.error('Error picking document:', error);
+            console.error('Error picking from gallery:', error);
+            Alert.alert('Error', 'Failed to pick image');
         }
+    };
+
+    const handleAddFileChoice = (onFileSelected: (asset: any) => void, allowDocuments = false) => {
+        const options = [
+            { text: 'Take Photo', onPress: () => handleTakePhoto(onFileSelected) },
+            { text: 'Choose from Gallery', onPress: () => handlePickFromGallery(onFileSelected) },
+        ];
+
+        if (allowDocuments) {
+            options.push({
+                text: 'Select Document',
+                onPress: async () => {
+                    try {
+                        const result = await DocumentPicker.getDocumentAsync({
+                            type: ['application/pdf', 'image/*'],
+                            copyToCacheDirectory: true,
+                        });
+                        if (!result.canceled) {
+                            onFileSelected(result.assets[0]);
+                        }
+                    } catch (err) {
+                        console.error('Error picking document:', err);
+                        Alert.alert('Error', 'Failed to pick document');
+                    }
+                }
+            });
+        }
+
+        options.push({ text: 'Cancel', style: 'cancel' } as any);
+
+        Alert.alert(
+            'Select Source',
+            'Choose how you want to add the file',
+            options as any
+        );
+    };
+
+    const handleUploadBG = async (wo: WorkOrder) => {
+        handleAddFileChoice((asset) => {
+            Alert.alert('Success', `File ${asset.name} selected for WO: ${wo.WONumber}`);
+            // In a real app, you might trigger an upload here or save to state
+        }, true);
+    };
+
+    const pickMaterialFiles = async () => {
+        handleAddFileChoice((asset) => {
+            setMaterialFiles(prev => [...prev, asset]);
+        }, true);
     };
 
     const removeMaterialFile = (index: number) => {
@@ -189,7 +264,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
     const handleMaterialUpload = async () => {
         if (!selectedWorkOrder) return;
-        
+
         // Use 0 or null as fallback for optional IDs if they are null
         const assetId = materialAssetId || 0;
         const assetTypeId = materialAssetTypeId || 0;
@@ -224,7 +299,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
     };
 
     const toggleWorkOrder = (id: number) => {
-        setExpandedWOIds(prev => 
+        setExpandedWOIds(prev =>
             prev.includes(id) ? prev.filter(woId => woId !== id) : [...prev, id]
         );
     };
@@ -237,11 +312,11 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
     const handleNextStep = async () => {
         if (!tender) return;
-        
+
         try {
             // Save draft at each step
             const draftData: any = {
-                Id: 0, 
+                Id: 0,
                 ProjectId: tender.Id,
                 WorkOrderId: selectedWorkOrder?.Id,
                 AssetId: formData.assetId,
@@ -286,9 +361,9 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                     ComponentValues: formData.componentValues,
                 };
             }
-            
+
             // await projectAssetService.saveDraft(draftData);
-            
+
             if (currentStep < 6) {
                 setCurrentStep(currentStep + 1);
             } else {
@@ -314,15 +389,15 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
             const location = await Location.getCurrentPositionAsync({
                 accuracy: Location.Accuracy.High,
             });
-            
+
             const lat = location.coords.latitude.toString();
             const lon = location.coords.longitude.toString();
-            
+
             updateFormData('latitude', lat);
             updateFormData('longitude', lon);
-            
+
             Alert.alert(
-                'Location Captured', 
+                'Location Captured',
                 `Latitude: ${lat}\nLongitude: ${lon}`,
                 [{ text: 'OK' }]
             );
@@ -340,7 +415,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
     const renderFormField = (label: string, key: string, icon: any, placeholder: string = '', required: boolean = false) => (
         <View style={styles.formField}>
-            <Text style={styles.formLabel}>{label}{required && <Text style={{color: '#dc2626'}}> *</Text>}</Text>
+            <Text style={styles.formLabel}>{label}{required && <Text style={{ color: '#dc2626' }}> *</Text>}</Text>
             <View style={styles.inputWrapper}>
                 {icon && <View style={styles.inputIcon}>{icon}</View>}
                 <TextInput
@@ -355,7 +430,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
     const renderDropdownField = (label: string, key: string, data: DropdownItem[], icon: any, required: boolean = false) => {
         const selectedItem = data.find(item => item.Id === (formData as any)[key]);
-        
+
         const openSelection = () => {
             if (data.length === 0) {
                 Alert.alert('Info', `No ${label} available`);
@@ -369,7 +444,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
         return (
             <View style={styles.formField}>
-                <Text style={styles.formLabel}>{label}{required && <Text style={{color: '#dc2626'}}> *</Text>}</Text>
+                <Text style={styles.formLabel}>{label}{required && <Text style={{ color: '#dc2626' }}> *</Text>}</Text>
                 <TouchableOpacity style={styles.dropdownTrigger} onPress={openSelection}>
                     <Text style={styles.dropdownValue}>{selectedItem?.Name || `Select ${label}`}</Text>
                     <MaterialCommunityIcons name="unfold-more-horizontal" size={20} color="#9ca3af" />
@@ -418,7 +493,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView 
+            <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={true}
@@ -623,7 +698,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                     <Text style={styles.woValueLabelNew}>Value</Text>
                                                     <Text style={styles.woValueAmountNew}>₹{wo.WOValue}</Text>
                                                 </View>
-                                                <TouchableOpacity 
+                                                <TouchableOpacity
                                                     style={styles.woExpandBtn}
                                                     onPress={() => toggleWorkOrder(wo.Id)}
                                                 >
@@ -645,9 +720,41 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                             <Text style={styles.woInfoValue}>{wo.BGValuePercentage}%</Text>
                                                         </View>
                                                     </View>
+                                                    <TouchableOpacity
+                                                        style={styles.btnUploadMaterial}
+                                                        onPress={() => {
+                                                            setSelectedWorkOrder(wo);
+                                                            // Auto-select first asset if available
+                                                            if (wo.Assets && wo.Assets.length > 0) {
+                                                                const asset = wo.Assets[0];
+                                                                // Always prioritize AssetId, then Id as fallback
+                                                                setMaterialAssetId(asset.AssetId || asset.Id || 0);
 
+                                                                if (asset.AssetType && asset.AssetType.length > 0) {
+                                                                    const assetType = asset.AssetType[0];
+                                                                    setMaterialAssetTypeId(assetType.Id || 0);
+                                                                    if (assetType.AssetSubType && assetType.AssetSubType.length > 0) {
+                                                                        setMaterialAssetSubTypeId(assetType.AssetSubType[0].Id || 0);
+                                                                    } else {
+                                                                        setMaterialAssetSubTypeId(0);
+                                                                    }
+                                                                } else {
+                                                                    setMaterialAssetTypeId(0);
+                                                                    setMaterialAssetSubTypeId(0);
+                                                                }
+                                                            } else {
+                                                                setMaterialAssetId(0);
+                                                                setMaterialAssetTypeId(0);
+                                                                setMaterialAssetSubTypeId(0);
+                                                            }
+                                                            setIsMaterialModalVisible(true);
+                                                        }}
+                                                    >
+                                                        <Feather name="package" size={16} color="#059669" />
+                                                        <Text style={styles.btnUploadMaterialText}> Upload Raw material</Text>
+                                                    </TouchableOpacity>
                                                     <View style={styles.woActionsContainer}>
-                                                        <TouchableOpacity 
+                                                        <TouchableOpacity
                                                             style={styles.btnFillForm}
                                                             onPress={() => handleFillForm(wo)}
                                                         >
@@ -655,42 +762,10 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                             <Text style={styles.btnFillFormText}> Fill the Form</Text>
                                                         </TouchableOpacity>
 
-                                                        <TouchableOpacity 
-                                                            style={styles.btnUploadMaterial}
-                                                            onPress={() => {
-                                                                setSelectedWorkOrder(wo);
-                                                                // Auto-select first asset if available
-                                                                if (wo.Assets && wo.Assets.length > 0) {
-                                                                    const asset = wo.Assets[0];
-                                                                    // Always prioritize AssetId, then Id as fallback
-                                                                    setMaterialAssetId(asset.AssetId || asset.Id || 0);
-                                                                    
-                                                                    if (asset.AssetType && asset.AssetType.length > 0) {
-                                                                        const assetType = asset.AssetType[0];
-                                                                        setMaterialAssetTypeId(assetType.Id || 0);
-                                                                        if (assetType.AssetSubType && assetType.AssetSubType.length > 0) {
-                                                                            setMaterialAssetSubTypeId(assetType.AssetSubType[0].Id || 0);
-                                                                        } else {
-                                                                            setMaterialAssetSubTypeId(0);
-                                                                        }
-                                                                    } else {
-                                                                        setMaterialAssetTypeId(0);
-                                                                        setMaterialAssetSubTypeId(0);
-                                                                    }
-                                                                } else {
-                                                                    setMaterialAssetId(0);
-                                                                    setMaterialAssetTypeId(0);
-                                                                    setMaterialAssetSubTypeId(0);
-                                                                }
-                                                                setIsMaterialModalVisible(true);
-                                                            }}
-                                                        >
-                                                            <Feather name="package" size={16} color="#059669" />
-                                                            <Text style={styles.btnUploadMaterialText}> Upload Raw material</Text>
-                                                        </TouchableOpacity>
+
                                                     </View>
 
-                                                    <TouchableOpacity 
+                                                    <TouchableOpacity
                                                         style={styles.btnUploadBG}
                                                         onPress={() => handleUploadBG(wo)}
                                                     >
@@ -809,7 +884,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                         </View>
                                     </View>
 
-                                    {renderDropdownField('ASSET', 'assetId', tender.Assets?.map(a => ({Id: a.Id, Name: a.AssetName})) || [], <Feather name="box" size={14} />, true)}
+                                    {renderDropdownField('ASSET', 'assetId', tender.Assets?.map(a => ({ Id: a.Id, Name: a.AssetName })) || [], <Feather name="box" size={14} />, true)}
                                 </ScrollView>
                             )}
 
@@ -825,18 +900,23 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                         {renderFormField('Phone Number', 'phoneNumber', <Feather name="phone" size={14} />, '6787877777', true)}
                                         {renderFormField('Alt. Phone Number', 'altPhoneNumber', <Feather name="phone" size={14} />, 'Alt. Phone Number')}
                                         {renderFormField('Email', 'email', <Feather name="mail" size={14} />, 'dessv.tatwatech@gmail.com')}
-                                        {renderDropdownField('Gender', 'gender', [{Id: 1, Name: 'Male'}, {Id: 2, Name: 'Female'}], null)}
-                                        {renderDropdownField('SES', 'ses', [{Id: 1, Name: 'APL'}, {Id: 2, Name: 'BPL'}], null)}
-                                        {renderDropdownField('Caste', 'caste', [{Id: 1, Name: 'General'}, {Id: 2, Name: 'OBC'}], null)}
+                                        {renderDropdownField('Gender', 'gender', [{ Id: 1, Name: 'Male' }, { Id: 2, Name: 'Female' }], null)}
+                                        {renderDropdownField('SES', 'ses', [{ Id: 1, Name: 'APL' }, { Id: 2, Name: 'BPL' }], null)}
+                                        {renderDropdownField('Caste', 'caste', [{ Id: 1, Name: 'General' }, { Id: 2, Name: 'OBC' }], null)}
                                     </View>
-                                    
+
                                     <View style={styles.photoUploadContainer}>
                                         <Text style={styles.formLabel}><Feather name="camera" size={14} /> Beneficiary Photo</Text>
-                                        <TouchableOpacity style={styles.photoUploadBox}>
+                                        <TouchableOpacity
+                                            style={styles.photoUploadBox}
+                                            onPress={() => handleAddFileChoice((asset) => updateFormData('beneficiaryPhoto', asset.uri))}
+                                        >
                                             <View style={styles.photoUploadIcon}>
                                                 <Feather name="camera" size={24} color="#9ca3af" />
                                             </View>
-                                            <Text style={styles.photoUploadText}>Click to upload</Text>
+                                            <Text style={styles.photoUploadText}>
+                                                {formData.beneficiaryPhoto ? 'Photo Captured' : 'Click to upload'}
+                                            </Text>
                                         </TouchableOpacity>
                                     </View>
                                 </ScrollView>
@@ -845,11 +925,11 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             {currentStep === 2 && (
                                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
                                     <View style={styles.sectionDivider}>
-                                        <View style={[styles.sectionBadge, {backgroundColor: '#ffedd5'}]}><Text style={[styles.sectionBadgeText, {color: '#f97316'}]}>B</Text></View>
-                                        <Text style={[styles.sectionLabel, {color: '#f97316'}]}>Location Information</Text>
+                                        <View style={[styles.sectionBadge, { backgroundColor: '#ffedd5' }]}><Text style={[styles.sectionBadgeText, { color: '#f97316' }]}>B</Text></View>
+                                        <Text style={[styles.sectionLabel, { color: '#f97316' }]}>Location Information</Text>
                                     </View>
                                     <View style={styles.formGrid}>
-                                        {renderDropdownField('State', 'stateId', [{Id: 1, Name: 'Odisha'}], null, true)}
+                                        {renderDropdownField('State', 'stateId', [{ Id: 1, Name: 'Odisha' }], null, true)}
                                         {renderDropdownField('District', 'districtId', districts, null, true)}
                                         {renderDropdownField('Block', 'blockId', blocks, null, true)}
                                         {renderDropdownField('Gram Panchayat', 'gpId', gps, null)}
@@ -865,12 +945,12 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             {currentStep === 3 && (
                                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
                                     <View style={styles.sectionDivider}>
-                                        <View style={[styles.sectionBadge, {backgroundColor: '#f3e8ff'}]}><Text style={[styles.sectionBadgeText, {color: '#9333ea'}]}>3</Text></View>
-                                        <Text style={[styles.sectionLabel, {color: '#9333ea'}]}>Asset Technical Details</Text>
+                                        <View style={[styles.sectionBadge, { backgroundColor: '#f3e8ff' }]}><Text style={[styles.sectionBadgeText, { color: '#9333ea' }]}>3</Text></View>
+                                        <Text style={[styles.sectionLabel, { color: '#9333ea' }]}>Asset Technical Details</Text>
                                     </View>
                                     <View style={styles.formGrid}>
                                         {renderFormField('Capacity', 'capacity', <Feather name="zap" size={14} />, '56')}
-                                        {renderDropdownField('CMC Period (Years)', 'cmcPeriod', [{Id: 1, Name: '1 Year'}, {Id: 4, Name: '4 Years'}], null)}
+                                        {renderDropdownField('CMC Period (Years)', 'cmcPeriod', [{ Id: 1, Name: '1 Year' }, { Id: 4, Name: '4 Years' }], null)}
                                         {renderFormField('Installation Class', 'installationClass', <Feather name="box" size={14} />, 'Ground Mounted Solar...')}
                                         {renderFormField('Date of Installation', 'dateOfInstallation', <Feather name="calendar" size={14} />, '03/11/2026', true)}
                                         {renderFormField('Date of Commissioning', 'dateOfCommissioning', <Feather name="calendar" size={14} />, '03/17/2026', true)}
@@ -881,11 +961,11 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             {currentStep === 4 && (
                                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
                                     <View style={styles.sectionDivider}>
-                                        <View style={[styles.sectionBadge, {backgroundColor: '#dbeafe'}]}><Text style={[styles.sectionBadgeText, {color: '#3b82f6'}]}>4</Text></View>
-                                        <Text style={[styles.sectionLabel, {color: '#3b82f6'}]}>Installation Location</Text>
+                                        <View style={[styles.sectionBadge, { backgroundColor: '#dbeafe' }]}><Text style={[styles.sectionBadgeText, { color: '#3b82f6' }]}>4</Text></View>
+                                        <Text style={[styles.sectionLabel, { color: '#3b82f6' }]}>Installation Location</Text>
                                     </View>
                                     <View style={styles.formGrid}>
-                                        {renderDropdownField('State', 'stateId', [{Id: 1, Name: 'Odisha'}], null, true)}
+                                        {renderDropdownField('State', 'stateId', [{ Id: 1, Name: 'Odisha' }], null, true)}
                                         {renderDropdownField('District', 'districtId', districts, null, true)}
                                         {renderDropdownField('Block', 'blockId', blocks, null, true)}
                                         {renderDropdownField('Gram Panchayat', 'gpId', gps, null)}
@@ -895,11 +975,11 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                         {renderFormField('House No', 'houseNo', null, 'House Number')}
                                         {renderFormField('Area/Locality', 'areaLocality', null, 'Area or Locality')}
                                         {renderFormField('Street/Landmark', 'streetLandmark', null, 'Street or Landmark')}
-                                        
+
                                         <View style={[styles.formField, { width: '100%' }]}>
-                                            <TouchableOpacity 
+                                            <TouchableOpacity
                                                 style={[
-                                                    styles.btnUploadBG, 
+                                                    styles.btnUploadBG,
                                                     { borderColor: '#3b82f6', backgroundColor: '#eff6ff', width: '100%', justifyContent: 'center' },
                                                     isCapturingLocation && { opacity: 0.7 }
                                                 ]}
@@ -926,8 +1006,8 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             {currentStep === 5 && (
                                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
                                     <View style={styles.sectionDivider}>
-                                        <View style={[styles.sectionBadge, {backgroundColor: '#fef3c7'}]}><Text style={[styles.sectionBadgeText, {color: '#d97706'}]}>5</Text></View>
-                                        <Text style={[styles.sectionLabel, {color: '#d97706'}]}>Documents Upload</Text>
+                                        <View style={[styles.sectionBadge, { backgroundColor: '#fef3c7' }]}><Text style={[styles.sectionBadgeText, { color: '#d97706' }]}>5</Text></View>
+                                        <Text style={[styles.sectionLabel, { color: '#d97706' }]}>Documents Upload</Text>
                                     </View>
                                     <View style={styles.formGrid}>
                                         <View style={styles.formField}>
@@ -939,26 +1019,20 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                     <Feather name="image" size={24} color="#9ca3af" />
                                                 </View>
                                             )}
-                                            <TouchableOpacity 
-                                                style={[styles.btnUploadBG, { marginTop: 8 }]} 
-                                                onPress={async () => {
-                                                    const result = await DocumentPicker.getDocumentAsync({ type: 'image/*', copyToCacheDirectory: true });
-                                                    if (!result.canceled) updateFormData('installationPhoto', result.assets[0].uri);
-                                                }}
+                                            <TouchableOpacity
+                                                style={[styles.btnUploadBG, { marginTop: 8 }]}
+                                                onPress={() => handleAddFileChoice((asset) => updateFormData('installationPhoto', asset.uri))}
                                             >
                                                 <Feather name="upload-cloud" size={16} color="#f97316" />
-                                                <Text style={styles.btnUploadBGText}> Upload Photo</Text>
+                                                <Text style={styles.btnUploadBGText}> {formData.installationPhoto ? 'Photo Selected' : 'Upload Photo'}</Text>
                                             </TouchableOpacity>
                                         </View>
 
                                         <View style={styles.formField}>
                                             <Text style={styles.formLabel}>Installation Certificate</Text>
-                                            <TouchableOpacity 
-                                                style={styles.btnUploadBG} 
-                                                onPress={async () => {
-                                                    const result = await DocumentPicker.getDocumentAsync({ type: ['application/pdf', 'image/*'], copyToCacheDirectory: true });
-                                                    if (!result.canceled) updateFormData('installationCertificate', result.assets[0].uri);
-                                                }}
+                                            <TouchableOpacity
+                                                style={styles.btnUploadBG}
+                                                onPress={() => handleAddFileChoice((asset) => updateFormData('installationCertificate', asset.uri), true)}
                                             >
                                                 <Feather name="upload-cloud" size={16} color="#f97316" />
                                                 <Text style={styles.btnUploadBGText}> {formData.installationCertificate ? 'File Selected' : 'Upload CC'}</Text>
@@ -967,12 +1041,9 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
                                         <View style={styles.formField}>
                                             <Text style={styles.formLabel}>JCC Document</Text>
-                                            <TouchableOpacity 
-                                                style={styles.btnUploadBG} 
-                                                onPress={async () => {
-                                                    const result = await DocumentPicker.getDocumentAsync({ type: ['application/pdf', 'image/*'], copyToCacheDirectory: true });
-                                                    if (!result.canceled) updateFormData('jccDocument', result.assets[0].uri);
-                                                }}
+                                            <TouchableOpacity
+                                                style={styles.btnUploadBG}
+                                                onPress={() => handleAddFileChoice((asset) => updateFormData('jccDocument', asset.uri), true)}
                                             >
                                                 <Feather name="upload-cloud" size={16} color="#f97316" />
                                                 <Text style={styles.btnUploadBGText}> {formData.jccDocument ? 'File Selected' : 'Upload JCC'}</Text>
@@ -985,12 +1056,12 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             {currentStep === 6 && (
                                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
                                     <View style={styles.sectionDivider}>
-                                        <View style={[styles.sectionBadge, {backgroundColor: '#f3e8ff'}]}><Text style={[styles.sectionBadgeText, {color: '#9333ea'}]}>6</Text></View>
-                                        <Text style={[styles.sectionLabel, {color: '#9333ea'}]}>Component Asset Details</Text>
+                                        <View style={[styles.sectionBadge, { backgroundColor: '#f3e8ff' }]}><Text style={[styles.sectionBadgeText, { color: '#9333ea' }]}>6</Text></View>
+                                        <Text style={[styles.sectionLabel, { color: '#9333ea' }]}>Component Asset Details</Text>
                                     </View>
                                     <View style={{ paddingBottom: 20 }}>
                                         <Text style={[styles.placeholderSubtitle, { marginBottom: 16 }]}>Add technical specifications for each component category</Text>
-                                        
+
                                         {formData.componentValues.length > 0 ? (
                                             formData.componentValues.map((comp, idx) => (
                                                 <View key={idx} style={styles.fieldValueBox}>
@@ -1013,21 +1084,21 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                         </View>
 
                         <View style={styles.modalFooter}>
-                             {currentStep > 0 && (
-                                <TouchableOpacity 
+                            {currentStep > 0 && (
+                                <TouchableOpacity
                                     style={styles.btnCancel}
                                     onPress={() => setCurrentStep(currentStep - 1)}
                                 >
                                     <Text style={styles.btnCancelText}>Previous</Text>
                                 </TouchableOpacity>
                             )}
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={styles.btnCancel}
                                 onPress={() => setIsFormModalVisible(false)}
                             >
                                 <Text style={styles.btnCancelText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={styles.btnSaveNext}
                                 onPress={handleNextStep}
                             >
@@ -1070,7 +1141,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                     <View style={{ gap: 12 }}>
                                         <View style={styles.formField}>
                                             <Text style={styles.formLabel}>Select Asset</Text>
-                                            <TouchableOpacity 
+                                            <TouchableOpacity
                                                 style={styles.dropdownTrigger}
                                                 onPress={() => {
                                                     if (!selectedWorkOrder?.Assets) return;
@@ -1112,7 +1183,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                         {/* File Selection */}
                                         <View style={styles.formField}>
                                             <Text style={styles.formLabel}>Material Files</Text>
-                                            <TouchableOpacity 
+                                            <TouchableOpacity
                                                 style={styles.btnPickFiles}
                                                 onPress={pickMaterialFiles}
                                             >
@@ -1138,13 +1209,13 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                         </ScrollView>
 
                         <View style={styles.modalFooter}>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={styles.btnCancel}
                                 onPress={() => setIsMaterialModalVisible(false)}
                             >
                                 <Text style={styles.btnCancelText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[styles.btnSaveNext, { backgroundColor: '#10b981' }]}
                                 onPress={handleMaterialUpload}
                                 disabled={isUploadingMaterial}
@@ -1180,8 +1251,8 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                         </View>
                         <ScrollView style={styles.selectionScroll} showsVerticalScrollIndicator={false}>
                             {selectionData.map((item) => (
-                                <TouchableOpacity 
-                                    key={item.Id} 
+                                <TouchableOpacity
+                                    key={item.Id}
                                     style={styles.selectionItem}
                                     onPress={() => {
                                         updateFormData(selectionKey, item.Id);
@@ -1642,7 +1713,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#3b82f6',
     },
-    
+
     // Photo Upload Styles
     photoUploadContainer: {
         marginTop: 16,
