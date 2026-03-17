@@ -6,6 +6,8 @@ import LoginScreen from '../screens/LoginScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 import ProjectDetailsScreen from '../screens/ProjectDetails';
 
+import { navigationRef } from './NavigationService';
+
 export type RootStackParamList = {
     Splash: undefined;
     Login: undefined;
@@ -18,7 +20,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
     return (
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
             <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 <Stack.Screen name="Login" component={LoginScreen} />

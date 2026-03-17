@@ -23,7 +23,9 @@ const SplashScreen = () => {
 
       try {
         const authData = await authService.getAuthData();
-        if (authData?.token || authData?.Token) {
+        const token = authData?.AccessToken || authData?.token || authData?.Token;
+        
+        if (token) {
           // User is logged in, navigate to Main
           navigation.replace('Main');
         } else {

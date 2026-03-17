@@ -171,6 +171,53 @@ class TenderService {
 
         return apiClient.post<any>(`/workorders/${workOrderId}/material-verifications`, formData);
     }
+
+    async uploadBankGuarantee(workOrderId: number, data: {
+        BankName: string;
+        BGNumber: string;
+        IssueDate: string;
+        ExpiryDate: string;
+        Amount: number;
+        Document: any;
+    }): Promise<ApiResponse<any>> {
+        const formData = new FormData();
+        formData.append('BankName', data.BankName);
+        formData.append('BGNumber', data.BGNumber);
+        formData.append('IssueDate', data.IssueDate);
+        formData.append('ExpiryDate', data.ExpiryDate);
+        formData.append('Amount', data.Amount.toString());
+
+        if (data.Document) {
+            const name = data.Document.name || data.Document.uri.split('/').pop() || 'document.pdf';
+            const type = data.Document.mimeType || data.Document.type || 'application/pdf';
+
+            if (Platform.OS === 'web') {
+                try {
+                    const response = await fetch(data.Document.uri);
+                    const blob = await response.blob();
+                    formData.append('Document', blob, name);
+                } catch (err) {
+                    console.error('Error converting file to blob on web:', err);
+                    formData.append('Document', {
+                        uri: data.Document.uri,
+                        name: name,
+                        type: type,
+                    } as any);
+                }
+            } else {
+                formData.append('Document', {
+                    uri: data.Document.uri,
+                    name: name,
+                    type: type,
+                } as any);
+            }
+        } else {
+            // API expects empty value if no document
+            formData.append('Document', '');
+        }
+
+        return apiClient.post<any>(`/workorders/${workOrderId}/bankguarantees`, formData);
+    }
 }
 
 export const tenderService = new TenderService();

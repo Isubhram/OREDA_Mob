@@ -142,7 +142,7 @@ const ProjectScreen = ({ navigation }: any) => {
 	return (
 		<SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
 			<ScrollView
-				style={styles.mainScrollView}
+				contentContainerStyle={styles.mainScrollViewContent}
 				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 			>
 				{/* Header Actions */}

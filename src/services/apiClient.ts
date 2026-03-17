@@ -118,8 +118,14 @@ class ApiClient {
                     } catch (refreshError) {
                         this.isRefreshing = false;
                         this.refreshSubscribers = [];
-                        // Optionally clear auth data and redirect to login
+                        
+                        // Clear auth data and redirect to login
                         await authService.clearAuthData();
+                        
+                        // Lazy import to avoid circular dependency
+                        const NavigationService = require('../navigation/NavigationService');
+                        NavigationService.reset('Login');
+                        
                         throw new ApiError('Session expired. Please login again.', 401, 'Session Expired');
                     }
                 } else {

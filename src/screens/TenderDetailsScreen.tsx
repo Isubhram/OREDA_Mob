@@ -7,7 +7,9 @@ import { projectAssetService, DropdownItem } from '../services/projectAssetServi
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { Modal, TextInput } from 'react-native';
+import { Modal, TextInput, StatusBar, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
@@ -35,12 +37,28 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
     const [materialAssetTypeId, setMaterialAssetTypeId] = useState<number | null>(null);
     const [materialAssetSubTypeId, setMaterialAssetSubTypeId] = useState<number | null>(null);
     const [isUploadingMaterial, setIsUploadingMaterial] = useState(false);
-
     // Dropdown Data
     const [districts, setDistricts] = useState<DropdownItem[]>([]);
     const [blocks, setBlocks] = useState<DropdownItem[]>([]);
     const [gps, setGps] = useState<DropdownItem[]>([]);
     const [villages, setVillages] = useState<DropdownItem[]>([]);
+
+    // Bank Guarantee State
+    const [isBGModalVisible, setIsBGModalVisible] = useState(false);
+    const [isSubmittingBGs, setIsSubmittingBGs] = useState(false);
+    const [bgFormData, setBgFormData] = useState({
+        bankName: '',
+        bgNumber: '',
+        amount: '',
+        issueDate: '',
+        expiryDate: '',
+        document: null as any
+    });
+    const [addedBGs, setAddedBGs] = useState<any[]>([]);
+
+    // Date Picker State for BG
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [datePickerTarget, setDatePickerTarget] = useState<'issueDate' | 'expiryDate' | null>(null);
 
     // Form Data State
     const [formData, setFormData] = useState({
@@ -225,11 +243,102 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
         setIsFileSourceVisible(true);
     };
 
+    const updateBgFormData = (key: string, value: any) => {
+        setBgFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    const onBgDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(false);
+        if (selectedDate && datePickerTarget) {
+            const day = selectedDate.getDate().toString().padStart(2, '0');
+            const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+            const year = selectedDate.getFullYear();
+            const dateString = `${day}/${month}/${year}`;
+            updateBgFormData(datePickerTarget, dateString);
+        }
+        setDatePickerTarget(null);
+    };
+
     const handleUploadBG = async (wo: WorkOrder) => {
+        setSelectedWorkOrder(wo);
+        // Reset form but keep existing BGs
+        setBgFormData({
+            bankName: '',
+            bgNumber: '',
+            amount: '',
+            issueDate: '',
+            expiryDate: '',
+            document: null as any
+        });
+        setIsBGModalVisible(true);
+    };
+
+    const handleAddBGDocument = () => {
         handleAddFileChoice((asset) => {
-            Alert.alert('Success', `File ${asset.name} selected for WO: ${wo.WONumber}`);
-            // In a real app, you might trigger an upload here or save to state
+            updateBgFormData('document', asset);
         }, true);
+    };
+
+    const handleSaveBG = () => {
+        if (!bgFormData.bankName || !bgFormData.bgNumber || !bgFormData.amount || !bgFormData.issueDate || !bgFormData.expiryDate || !bgFormData.document) {
+            Alert.alert('Error', 'Please fill all required BG details including the document.');
+            return;
+        }
+
+        // Add to list
+        const newBG = {
+            id: Date.now(),
+            ...bgFormData
+        };
+        setAddedBGs(prev => [...prev, newBG]);
+
+        // Reset form for next entry
+        setBgFormData({
+            bankName: '',
+            bgNumber: '',
+            amount: '',
+            issueDate: '',
+            expiryDate: '',
+            document: null as any
+        });
+    };
+
+    const handleSubmitBGs = async () => {
+        if (!selectedWorkOrder) return;
+        if (addedBGs.length === 0) {
+            Alert.alert('Error', 'No Bank Guarantees added to submit.');
+            return;
+        }
+
+        setIsSubmittingBGs(true);
+        try {
+            for (const bg of addedBGs) {
+                // Parse DD/MM/YYYY to Date object
+                const [iDay, iMonth, iYear] = bg.issueDate.split('/').map(Number);
+                const [eDay, eMonth, eYear] = bg.expiryDate.split('/').map(Number);
+                
+                const issueDateObj = new Date(iYear, iMonth - 1, iDay);
+                const expiryDateObj = new Date(eYear, eMonth - 1, eDay);
+
+                await tenderService.uploadBankGuarantee(selectedWorkOrder.Id, {
+                    BankName: bg.bankName,
+                    BGNumber: bg.bgNumber,
+                    IssueDate: issueDateObj.toISOString(),
+                    ExpiryDate: expiryDateObj.toISOString(),
+                    Amount: parseFloat(bg.amount) || 0,
+                    Document: bg.document
+                });
+            }
+
+            Alert.alert('Success', 'All Bank Guarantees submitted successfully!');
+            setIsBGModalVisible(false);
+            setAddedBGs([]); // Clear list on success
+        } catch (error) {
+            console.error('Error submitting BGs:', error);
+            Alert.alert('Error', 'Failed to submit one or more Bank Guarantees');
+        } finally {
+            setIsSubmittingBGs(false);
+        }
     };
 
     const pickMaterialFiles = async () => {
@@ -408,10 +517,11 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
         </View>
     );
 
-    const renderDropdownField = (label: string, key: string, data: DropdownItem[], icon: any, required: boolean = false) => {
+    const renderDropdownField = (label: string, key: string, data: DropdownItem[], icon: any, required: boolean = false, disabled: boolean = false) => {
         const selectedItem = data.find(item => item.Id === (formData as any)[key]);
 
         const openSelection = () => {
+            if (disabled) return;
             if (data.length === 0) {
                 Alert.alert('Info', `No ${label} available`);
                 return;
@@ -425,8 +535,12 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
         return (
             <View style={styles.formField}>
                 <Text style={styles.formLabel}>{label}{required && <Text style={{ color: '#dc2626' }}> *</Text>}</Text>
-                <TouchableOpacity style={styles.dropdownTrigger} onPress={openSelection}>
-                    <Text style={styles.dropdownValue}>{selectedItem?.Name || `Select ${label}`}</Text>
+                <TouchableOpacity
+                    style={[styles.dropdownTrigger, disabled && { backgroundColor: '#f3f4f6' }]}
+                    onPress={openSelection}
+                    activeOpacity={disabled ? 1 : 0.7}
+                >
+                    <Text style={[styles.dropdownValue, disabled && { color: '#9ca3af' }]}>{selectedItem?.Name || `Select ${label}`}</Text>
                     <MaterialCommunityIcons name="unfold-more-horizontal" size={20} color="#9ca3af" />
                 </TouchableOpacity>
             </View>
@@ -448,51 +562,64 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.container}>
+            <View style={styles.container}>
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#dc2626" />
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     if (!tender) {
         return (
-            <SafeAreaView style={styles.container}>
+            <View style={styles.container}>
                 <View style={styles.centerContainer}>
                     <Text>Tender not found</Text>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backLink}>
                         <Text style={{ color: '#dc2626' }}>Go Back</Text>
                     </TouchableOpacity>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     const totalWOValue = tender.WorkOrders?.reduce((sum, wo) => sum + (wo.WOValue || 0), 0) || 0;
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
             <ScrollView
-                style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={true}
             >
-                {/* Header Section */}
-                <View style={styles.headerCard}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                        <Feather name='arrow-left' size={18} color='#4b5563' />
-                    </TouchableOpacity>
-                    <View style={styles.headerIconBox}>
-                        <MaterialCommunityIcons name='file-document' size={24} color='#fff' />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.headerTitle}>{tender.TenderNumber}</Text>
-                        <View style={styles.headerSubtitleRow}>
-                            <Feather name='folder' size={14} color='#6b7280' />
-                            <Text style={styles.headerSubtitle}> {tender.ProjectName}</Text>
+                {/* Premium Header with Gradient */}
+                <LinearGradient
+                    colors={['#8b1a1a', '#c52525', '#e23f3f']}
+                    style={styles.headerGradient}
+                >
+                    <SafeAreaView edges={['top', 'left', 'right']}>
+                        <View style={styles.headerContent}>
+                            <TouchableOpacity
+                                style={styles.backButton}
+                                onPress={() => navigation.goBack()}
+                                activeOpacity={0.7}
+                            >
+                                <Feather name='arrow-left' size={24} color='#fff' />
+                            </TouchableOpacity>
+                            <View style={styles.headerTitleContainer}>
+                                <Text style={styles.headerTitle} numberOfLines={2}>{tender.TenderNumber || 'Tender Details'}</Text>
+                                <View style={styles.headerBadge}>
+                                    <MaterialCommunityIcons name='folder-outline' size={14} color='#fff' opacity={0.8} />
+                                    <Text style={styles.headerBadgeText}>
+                                        {tender.ProjectName || 'Project'}
+                                    </Text>
+                                </View>
+                            </View>
                         </View>
-                    </View>
+                    </SafeAreaView>
+                </LinearGradient>
+
+                <View style={styles.headerActionsContainer}>
                     <View style={styles.headerActions}>
                         <TouchableOpacity style={styles.btnOutlineOrange}>
                             <Text style={styles.btnOutlineTextOrange}>Assign Work Order</Text>
@@ -663,7 +790,11 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                     const isExpanded = expandedWOIds.includes(wo.Id);
                                     return (
                                         <View key={wo.Id} style={styles.woCard}>
-                                            <View style={styles.woCardHeader}>
+                                        <TouchableOpacity
+                                            style={styles.woCardHeader}
+                                            onPress={() => toggleWorkOrder(wo.Id)}
+                                            activeOpacity={0.7}
+                                        >
                                                 <View style={styles.woIndexBadge}>
                                                     <Text style={styles.woIndexText}>{index + 1}</Text>
                                                 </View>
@@ -678,13 +809,10 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                     <Text style={styles.woValueLabelNew}>Value</Text>
                                                     <Text style={styles.woValueAmountNew}>₹{wo.WOValue}</Text>
                                                 </View>
-                                                <TouchableOpacity
-                                                    style={styles.woExpandBtn}
-                                                    onPress={() => toggleWorkOrder(wo.Id)}
-                                                >
+                                                <View style={styles.woExpandBtn}>
                                                     <Feather name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color="#9ca3af" />
-                                                </TouchableOpacity>
-                                            </View>
+                                                </View>
+                                        </TouchableOpacity>
 
                                             {isExpanded && (
                                                 <>
@@ -719,58 +847,66 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                         </View>
                                                     ) : null}
 
-                                                    <View style={styles.woActionRow}>
-                                                        {!wo.Documents || wo.Documents.length === 0 ? (
-                                                            <TouchableOpacity
-                                                                style={styles.btnActionSecondary}
-                                                                onPress={() => {
-                                                                    setSelectedWorkOrder(wo);
-                                                                    // Auto-select first asset if available
-                                                                    if (wo.Assets && wo.Assets.length > 0) {
-                                                                        const asset = wo.Assets[0];
-                                                                        setMaterialAssetId(asset.AssetId || asset.Id || 0);
+                                                    {(!wo.Assets || wo.Assets.length === 0) ? (
+                                                        <Text style={styles.emptyAssetsText}>No assets found in this Work Order</Text>
+                                                    ) : (
+                                                        <View style={styles.woAssetsContainer}>
+                                                            <Text style={styles.woAssetsTitle}>Assets ({wo.Assets.length})</Text>
+                                                            {wo.Assets.map((asset, aIdx) => (
+                                                                <View key={asset.Id || aIdx} style={styles.woAssetCard}>
+                                                                    <View style={styles.woAssetHeader}>
+                                                                        <Feather name="package" size={16} color="#4b5563" />
+                                                                        <Text style={styles.woAssetName}>{asset.AssetName}</Text>
+                                                                    </View>
+                                                                    <View style={styles.btnActionRowAsset}>
+                                                                        <TouchableOpacity
+                                                                            style={styles.btnActionSecondaryAsset}
+                                                                            onPress={() => {
+                                                                                setSelectedWorkOrder(wo);
+                                                                                setMaterialAssetId(asset.AssetId || asset.Id || 0);
 
-                                                                        if (asset.AssetType && asset.AssetType.length > 0) {
-                                                                            const assetType = asset.AssetType[0];
-                                                                            setMaterialAssetTypeId(assetType.Id || 0);
-                                                                            if (assetType.AssetSubType && assetType.AssetSubType.length > 0) {
-                                                                                setMaterialAssetSubTypeId(assetType.AssetSubType[0].Id || 0);
-                                                                            } else {
-                                                                                setMaterialAssetSubTypeId(0);
-                                                                            }
-                                                                        } else {
-                                                                            setMaterialAssetTypeId(0);
-                                                                            setMaterialAssetSubTypeId(0);
-                                                                        }
-                                                                    } else {
-                                                                        setMaterialAssetId(0);
-                                                                        setMaterialAssetTypeId(0);
-                                                                        setMaterialAssetSubTypeId(0);
-                                                                    }
-                                                                    setIsMaterialModalVisible(true);
-                                                                }}
-                                                            >
-                                                                <Feather name="package" size={14} color="#059669" />
-                                                                <Text style={styles.btnActionSecondaryText}> Upload Raw Material</Text>
-                                                            </TouchableOpacity>
-                                                        ) : null}
+                                                                                if (asset.AssetType && asset.AssetType.length > 0) {
+                                                                                    const assetType = asset.AssetType[0];
+                                                                                    setMaterialAssetTypeId(assetType.Id || 0);
+                                                                                    if (assetType.AssetSubType && assetType.AssetSubType.length > 0) {
+                                                                                        setMaterialAssetSubTypeId(assetType.AssetSubType[0].Id || 0);
+                                                                                    } else {
+                                                                                        setMaterialAssetSubTypeId(0);
+                                                                                    }
+                                                                                } else {
+                                                                                    setMaterialAssetTypeId(0);
+                                                                                    setMaterialAssetSubTypeId(0);
+                                                                                }
+                                                                                setIsMaterialModalVisible(true);
+                                                                            }}
+                                                                        >
+                                                                            <Feather name="package" size={12} color="#059669" />
+                                                                            <Text style={styles.btnActionSecondaryTextAsset} numberOfLines={1}>Raw Material</Text>
+                                                                        </TouchableOpacity>
 
-                                                        <TouchableOpacity
-                                                            style={styles.btnActionPrimary}
-                                                                onPress={() => handleFillForm(wo)}
-                                                        >
-                                                            <MaterialCommunityIcons name="file-document-edit-outline" size={16} color="#fff" />
-                                                            <Text style={styles.btnActionPrimaryText}> Fill the Form</Text>
-                                                        </TouchableOpacity>
-                                                    </View>
+                                                                        <TouchableOpacity
+                                                                            style={styles.btnActionPrimaryAsset}
+                                                                            onPress={() => {
+                                                                                setFormData(prev => ({ ...prev, assetId: asset.AssetId || asset.Id as any }));
+                                                                                handleFillForm(wo);
+                                                                            }}
+                                                                        >
+                                                                            <MaterialCommunityIcons name="file-document-edit-outline" size={14} color="#fff" />
+                                                                            <Text style={styles.btnActionPrimaryTextAsset} numberOfLines={1}>Fill Form</Text>
+                                                                        </TouchableOpacity>
 
-                                                    <TouchableOpacity
-                                                        style={styles.btnUploadBG}
-                                                        onPress={() => handleUploadBG(wo)}
-                                                    >
-                                                        <Feather name="upload-cloud" size={16} color="#f97316" />
-                                                        <Text style={styles.btnUploadBGText}> Upload BG</Text>
-                                                    </TouchableOpacity>
+                                                                        <TouchableOpacity
+                                                                            style={styles.btnUploadBGAsset}
+                                                                            onPress={() => handleUploadBG(wo)}
+                                                                        >
+                                                                            <Feather name="upload-cloud" size={12} color="#f97316" />
+                                                                            <Text style={styles.btnUploadBGTextAsset} numberOfLines={1}>Upload BG</Text>
+                                                                        </TouchableOpacity>
+                                                                    </View>
+                                                                </View>
+                                                            ))}
+                                                        </View>
+                                                    )}
 
                                                 </>
                                             )}
@@ -882,8 +1018,45 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                             <Text style={styles.fieldValueText}>{selectedWorkOrder?.WONumber}</Text>
                                         </View>
                                     </View>
+                                    {renderDropdownField('ASSET', 'assetId', tender.Assets?.map(a => ({ Id: a.AssetId || a.Id, Name: a.AssetName })) || [], <Feather name="box" size={14} />, true, true)}
 
-                                    {renderDropdownField('ASSET', 'assetId', tender.Assets?.map(a => ({ Id: a.Id, Name: a.AssetName })) || [], <Feather name="box" size={14} />, true)}
+                                    {(() => {
+                                        const selectedAsset = tender.Assets?.find(a => String(a.AssetId || a.Id) === String(formData.assetId));
+                                        const asType = selectedAsset?.AssetType?.[0];
+                                        const subType = asType?.AssetSubType?.[0];
+                                        const typeName = asType?.Name || 'N/A';
+                                        const subTypeName = subType?.Name || 'N/A';
+
+                                        return (
+                                            <>
+                                                <View style={styles.fieldContainer}>
+                                                    <View style={styles.fieldLabelRow}>
+                                                        <Feather name="layers" size={14} color="#6b7280" />
+                                                        <Text style={styles.fieldLabel}> ASSET TYPE</Text>
+                                                    </View>
+                                                    <View style={[styles.fieldValueBox, { backgroundColor: '#f3f4f6' }]}>
+                                                        <View style={styles.fieldIconBox}>
+                                                            <Feather name="check" size={16} color="#9ca3af" />
+                                                        </View>
+                                                        <Text style={[styles.fieldValueText, { color: '#9ca3af' }]}>{typeName}</Text>
+                                                    </View>
+                                                </View>
+
+                                                <View style={styles.fieldContainer}>
+                                                    <View style={styles.fieldLabelRow}>
+                                                        <Feather name="list" size={14} color="#6b7280" />
+                                                        <Text style={styles.fieldLabel}> ASSET SUBTYPE</Text>
+                                                    </View>
+                                                    <View style={[styles.fieldValueBox, { backgroundColor: '#f3f4f6' }]}>
+                                                        <View style={styles.fieldIconBox}>
+                                                            <Feather name="check" size={16} color="#9ca3af" />
+                                                        </View>
+                                                        <Text style={[styles.fieldValueText, { color: '#9ca3af' }]}>{subTypeName}</Text>
+                                                    </View>
+                                                </View>
+                                            </>
+                                        );
+                                    })()}
                                 </ScrollView>
                             )}
 
@@ -991,7 +1164,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                     <Feather name="map-pin" size={16} color="#3b82f6" />
                                                 )}
                                                 <Text style={[styles.btnUploadBGText, { color: '#3b82f6' }]}>
-                                                    {isCapturingLocation ? ' Capturing...' : ' Capture Current Location'}
+                                                    {isCapturingLocation ? 'Capturing...' : 'Capture Current Location'}
                                                 </Text>
                                             </TouchableOpacity>
                                         </View>
@@ -1023,7 +1196,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                 onPress={() => handleAddFileChoice((asset) => updateFormData('installationPhoto', asset.uri))}
                                             >
                                                 <Feather name="upload-cloud" size={16} color="#f97316" />
-                                                <Text style={styles.btnUploadBGText}> {formData.installationPhoto ? 'Photo Selected' : 'Upload Photo'}</Text>
+                                                <Text style={styles.btnUploadBGText}>{formData.installationPhoto ? 'Photo Selected' : 'Upload Photo'}</Text>
                                             </TouchableOpacity>
                                         </View>
 
@@ -1034,7 +1207,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                 onPress={() => handleAddFileChoice((asset) => updateFormData('installationCertificate', asset.uri), true)}
                                             >
                                                 <Feather name="upload-cloud" size={16} color="#f97316" />
-                                                <Text style={styles.btnUploadBGText}> {formData.installationCertificate ? 'File Selected' : 'Upload CC'}</Text>
+                                                <Text style={styles.btnUploadBGText}>{formData.installationCertificate ? 'File Selected' : 'Upload CC'}</Text>
                                             </TouchableOpacity>
                                         </View>
 
@@ -1045,7 +1218,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                 onPress={() => handleAddFileChoice((asset) => updateFormData('jccDocument', asset.uri), true)}
                                             >
                                                 <Feather name="upload-cloud" size={16} color="#f97316" />
-                                                <Text style={styles.btnUploadBGText}> {formData.jccDocument ? 'File Selected' : 'Upload JCC'}</Text>
+                                                <Text style={styles.btnUploadBGText}>{formData.jccDocument ? 'File Selected' : 'Upload JCC'}</Text>
                                             </TouchableOpacity>
                                         </View>
                                     </View>
@@ -1083,25 +1256,25 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                         </View>
 
                         <View style={styles.modalFooter}>
-                        <TouchableOpacity
-                            style={styles.btnBackArrow}
-                            onPress={() => currentStep > 0 && setCurrentStep(currentStep - 1)}
-                            disabled={currentStep === 0}
-                        >
-                            <Feather name="arrow-left" size={20} color={currentStep === 0 ? "#d1d5db" : "#fff"} />
-                        </TouchableOpacity>
-                        <View style={{ flex: 1 }} />
-                        <TouchableOpacity
-                            style={styles.btnCancel}
-                            onPress={() => setIsFormModalVisible(false)}
-                        >
-                            <Text style={styles.btnCancelText}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.btnSaveNext} onPress={handleNextStep}>
-                            <Text style={styles.btnSaveNextText}>{currentStep === 6 ? 'Submit Form' : 'Save & Next'}</Text>
-                            <Feather name={currentStep === 6 ? "check" : "chevron-right"} size={16} color="#fff" />
-                        </TouchableOpacity>
-                    </View>
+                            <TouchableOpacity
+                                style={styles.btnBackArrow}
+                                onPress={() => currentStep > 0 && setCurrentStep(currentStep - 1)}
+                                disabled={currentStep === 0}
+                            >
+                                <Feather name="arrow-left" size={20} color={currentStep === 0 ? "#d1d5db" : "#fff"} />
+                            </TouchableOpacity>
+                            <View style={{ flex: 1 }} />
+                            <TouchableOpacity
+                                style={styles.btnCancel}
+                                onPress={() => setIsFormModalVisible(false)}
+                            >
+                                <Text style={styles.btnCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.btnSaveNext} onPress={handleNextStep}>
+                                <Text style={styles.btnSaveNextText}>{currentStep === 6 ? 'Submit Form' : 'Save & Next'}</Text>
+                                <Feather name={currentStep === 6 ? "check" : "chevron-right"} size={16} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -1116,65 +1289,101 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                                <View style={styles.modalHeaderIcon}>
-                                    <Feather name="package" size={24} color="#fff" />
-                                </View>
-                                <View>
-                                    <Text style={styles.modalTitle}>Upload Raw Material</Text>
-                                    <Text style={styles.modalSubtitle}>Work Order: {selectedWorkOrder?.WONumber}</Text>
-                                </View>
+                            <View style={styles.modalHeaderIcon}>
+                                <Feather name="package" size={24} color="#fff" />
                             </View>
+                            <View>
+                                <Text style={styles.modalTitle}>Upload Raw Material</Text>
+                                <Text style={styles.modalSubtitle}>Work Order: {selectedWorkOrder?.WONumber}</Text>
+                            </View>
+                        </View>
 
-                            <View style={styles.modalBody}>
-                                <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
-                                    <View style={styles.materialForm}>
-                                        <View style={styles.fieldContainer}>
-                                            <View style={styles.fieldLabelRow}>
-                                                <Text style={styles.fieldLabel}>SELECTED ASSET</Text>
-                                            </View>
-                                            <View style={styles.fieldValueBox}>
-                                                <View style={styles.fieldIconBox}>
-                                                    <Feather name="cpu" size={16} color="#3b82f6" />
-                                                </View>
-                                                <Text style={styles.fieldValueText}>
-                                                    {selectedWorkOrder?.Assets?.[0]?.AssetName || 'No asset selected'}
-                                                </Text>
-                                            </View>
-                                        </View>
+                        <View style={styles.modalBody}>
+                            <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
+                                <View style={styles.materialForm}>
+                                    {(() => {
+                                        const asset = selectedWorkOrder?.Assets?.find(a => (a.AssetId || a.Id) === materialAssetId);
+                                        const asType = asset?.AssetType?.[0];
+                                        const subType = asType?.AssetSubType?.[0];
 
-                                        <View style={styles.fieldContainer}>
-                                            <View style={styles.fieldLabelRow}>
-                                                <Text style={styles.fieldLabel}>UPLOAD MATERIAL FILES</Text>
-                                            </View>
-                                            <TouchableOpacity style={styles.btnPickFiles} onPress={pickMaterialFiles}>
-                                                <Feather name="plus-circle" size={20} color="#6b7280" />
-                                                <Text style={styles.btnPickFilesText}>Add Photos or Documents</Text>
-                                            </TouchableOpacity>
+                                        const assetName = asset?.AssetName || 'No asset selected';
+                                        const typeName = asType?.Name || 'N/A';
+                                        const subTypeName = subType?.Name || 'N/A';
 
-                                            <View style={styles.fileList}>
-                                                {materialFiles.map((file, index) => (
-                                                    <View key={index} style={styles.fileItem}>
-                                                        {file.mimeType?.startsWith('image/') ? (
-                                                            <Image source={{ uri: file.uri }} style={styles.filePreview} />
-                                                        ) : (
-                                                            <View style={styles.fileIconBox}>
-                                                                <Feather name="file-text" size={16} color="#6b7280" />
-                                                            </View>
-                                                        )}
-                                                        <View style={{ flex: 1, marginLeft: 8 }}>
-                                                            <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
-                                                            <Text style={styles.fileStatus}>Ready to upload</Text>
-                                                        </View>
-                                                        <TouchableOpacity onPress={() => removeMaterialFile(index)} style={styles.removeFileBtn}>
-                                                            <Feather name="trash-2" size={16} color="#dc2626" />
-                                                        </TouchableOpacity>
+                                        return (
+                                            <>
+                                                <View style={styles.fieldContainer}>
+                                                    <View style={styles.fieldLabelRow}>
+                                                        <Text style={styles.fieldLabel}>SELECTED ASSET</Text>
                                                     </View>
-                                                ))}
-                                            </View>
+                                                    <View style={styles.fieldValueBox}>
+                                                        <View style={styles.fieldIconBox}>
+                                                            <Feather name="cpu" size={16} color="#3b82f6" />
+                                                        </View>
+                                                        <Text style={styles.fieldValueText}>{assetName}</Text>
+                                                    </View>
+                                                </View>
+
+                                                <View style={styles.fieldContainer}>
+                                                    <View style={styles.fieldLabelRow}>
+                                                        <Text style={styles.fieldLabel}>ASSET TYPE</Text>
+                                                    </View>
+                                                    <View style={[styles.fieldValueBox, { backgroundColor: '#f3f4f6' }]}>
+                                                        <View style={styles.fieldIconBox}>
+                                                            <Feather name="layers" size={16} color="#9ca3af" />
+                                                        </View>
+                                                        <Text style={[styles.fieldValueText, { color: '#9ca3af' }]}>{typeName}</Text>
+                                                    </View>
+                                                </View>
+
+                                                <View style={styles.fieldContainer}>
+                                                    <View style={styles.fieldLabelRow}>
+                                                        <Text style={styles.fieldLabel}>ASSET SUBTYPE</Text>
+                                                    </View>
+                                                    <View style={[styles.fieldValueBox, { backgroundColor: '#f3f4f6' }]}>
+                                                        <View style={styles.fieldIconBox}>
+                                                            <Feather name="list" size={16} color="#9ca3af" />
+                                                        </View>
+                                                        <Text style={[styles.fieldValueText, { color: '#9ca3af' }]}>{subTypeName}</Text>
+                                                    </View>
+                                                </View>
+                                            </>
+                                        );
+                                    })()}
+
+                                    <View style={styles.fieldContainer}>
+                                        <View style={styles.fieldLabelRow}>
+                                            <Text style={styles.fieldLabel}>UPLOAD MATERIAL FILES</Text>
+                                        </View>
+                                        <TouchableOpacity style={styles.btnPickFiles} onPress={pickMaterialFiles}>
+                                            <Feather name="plus-circle" size={20} color="#6b7280" />
+                                            <Text style={styles.btnPickFilesText}>Add Photos or Documents</Text>
+                                        </TouchableOpacity>
+
+                                        <View style={styles.fileList}>
+                                            {materialFiles.map((file, index) => (
+                                                <View key={index} style={styles.fileItem}>
+                                                    {file.mimeType?.startsWith('image/') ? (
+                                                        <Image source={{ uri: file.uri }} style={styles.filePreview} />
+                                                    ) : (
+                                                        <View style={styles.fileIconBox}>
+                                                            <Feather name="file-text" size={16} color="#6b7280" />
+                                                        </View>
+                                                    )}
+                                                    <View style={{ flex: 1, marginLeft: 8 }}>
+                                                        <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+                                                        <Text style={styles.fileStatus}>Ready to upload</Text>
+                                                    </View>
+                                                    <TouchableOpacity onPress={() => removeMaterialFile(index)} style={styles.removeFileBtn}>
+                                                        <Feather name="trash-2" size={16} color="#dc2626" />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            ))}
                                         </View>
                                     </View>
-                                </ScrollView>
-                            </View>
+                                </View>
+                            </ScrollView>
+                        </View>
 
                         <View style={styles.modalFooter}>
                             <TouchableOpacity
@@ -1194,6 +1403,218 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                     <>
                                         <Text style={styles.btnSaveNextText}>Upload Material</Text>
                                         <Feather name="upload" size={16} color="#fff" />
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Bank Guarantee Upload Modal */}
+            <Modal
+                visible={isBGModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setIsBGModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <View style={styles.modalHeaderIcon}>
+                                <Feather name="shield" size={24} color="#fff" />
+                            </View>
+                            <View>
+                                <Text style={styles.modalTitle}>Upload Bank Guarantee</Text>
+                                <Text style={styles.modalSubtitle}>Work Order: {selectedWorkOrder?.WONumber}</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.modalBody}>
+                            <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.7 }} showsVerticalScrollIndicator={false}>
+                                <View style={styles.materialForm}>
+
+                                    <View style={styles.sectionDivider}>
+                                        <Text style={styles.sectionLabel}>Guarantee Details</Text>
+                                    </View>
+
+                                    {/* Bank Name Field */}
+                                    <View style={styles.formField}>
+                                        <Text style={styles.formLabel}>Bank Name <Text style={{ color: '#dc2626' }}>*</Text></Text>
+                                        <View style={styles.inputWrapper}>
+                                            <View style={styles.inputIcon}><MaterialCommunityIcons name="bank-outline" size={14} color="#6b7280" /></View>
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Enter Bank Name"
+                                                value={bgFormData.bankName}
+                                                onChangeText={(text) => updateBgFormData('bankName', text)}
+                                            />
+                                        </View>
+                                    </View>
+
+                                    {/* BG Number Field */}
+                                    <View style={styles.formField}>
+                                        <Text style={styles.formLabel}>BG Number <Text style={{ color: '#dc2626' }}>*</Text></Text>
+                                        <View style={styles.inputWrapper}>
+                                            <View style={styles.inputIcon}><Feather name="hash" size={14} color="#6b7280" /></View>
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Enter BG Number"
+                                                value={bgFormData.bgNumber}
+                                                onChangeText={(text) => updateBgFormData('bgNumber', text)}
+                                            />
+                                        </View>
+                                    </View>
+
+                                    {/* Amount Field */}
+                                    <View style={styles.formField}>
+                                        <Text style={styles.formLabel}>Amount <Text style={{ color: '#dc2626' }}>*</Text></Text>
+                                        <View style={styles.inputWrapper}>
+                                            <View style={styles.inputIcon}><MaterialCommunityIcons name="currency-inr" size={16} color="#6b7280" /></View>
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Enter Amount"
+                                                keyboardType="numeric"
+                                                value={bgFormData.amount}
+                                                onChangeText={(text) => updateBgFormData('amount', text)}
+                                            />
+                                        </View>
+                                    </View>
+
+                                    {/* Dates Row */}
+                                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                                        <View style={[styles.formField, { flex: 1 }]}>
+                                            <Text style={styles.formLabel}>
+                                                Issue Date <Text style={{ color: '#dc2626' }}>*</Text>
+                                            </Text>
+                                            <TouchableOpacity 
+                                                style={styles.inputWrapper}
+                                                onPress={() => {
+                                                    setDatePickerTarget('issueDate');
+                                                    setShowDatePicker(true);
+                                                }}
+                                            >
+                                                <View style={styles.inputIcon}><Feather name="calendar" size={14} color="#6b7280" /></View>
+                                                <Text style={[styles.input, { textAlignVertical: 'center', paddingTop: 12, color: bgFormData.issueDate ? '#1e293b' : '#9ca3af' }]}>
+                                                    {bgFormData.issueDate || 'DD/MM/YYYY'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        <View style={[styles.formField, { flex: 1 }]}>
+                                            <Text style={styles.formLabel}>
+                                                Expiry Date <Text style={{ color: '#dc2626' }}>*</Text>
+                                            </Text>
+                                            <TouchableOpacity 
+                                                style={styles.inputWrapper}
+                                                onPress={() => {
+                                                    setDatePickerTarget('expiryDate');
+                                                    setShowDatePicker(true);
+                                                }}
+                                            >
+                                                <View style={styles.inputIcon}><Feather name="calendar" size={14} color="#6b7280" /></View>
+                                                <Text style={[styles.input, { textAlignVertical: 'center', paddingTop: 12, color: bgFormData.expiryDate ? '#1e293b' : '#9ca3af' }]}>
+                                                    {bgFormData.expiryDate || 'DD/MM/YYYY'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={(() => {
+                                                if (datePickerTarget && bgFormData[datePickerTarget]) {
+                                                    const [d, m, y] = bgFormData[datePickerTarget].split('/').map(Number);
+                                                    return new Date(y, m - 1, d);
+                                                }
+                                                return new Date();
+                                            })()}
+                                            mode="date"
+                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                            onChange={onBgDateChange}
+                                        />
+                                    )}
+
+                                    {/* BG Document Upload */}
+                                    <View style={styles.formField}>
+                                        <Text style={styles.formLabel}>BG Document <Text style={{ color: '#dc2626' }}>*</Text></Text>
+                                        <TouchableOpacity
+                                            style={[styles.btnUploadBG, { marginTop: 4, width: '100%', justifyContent: 'center' }]}
+                                            onPress={handleAddBGDocument}
+                                        >
+                                            <Feather name="upload" size={16} color="#4b5563" />
+                                            <Text style={[styles.btnUploadBGText, { color: '#4b5563' }]}>Choose File</Text>
+                                        </TouchableOpacity>
+                                        {bgFormData.document && (
+                                            <View style={styles.fileItemBg}>
+                                                <Feather name="file-text" size={14} color="#059669" />
+                                                <Text style={styles.fileNameBg} numberOfLines={1}>{bgFormData.document.name}</Text>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    <TouchableOpacity onPress={handleSaveBG} style={[styles.btnActionPrimary, { marginTop: 8, paddingVertical: 12, borderRadius: 8, alignItems: 'center', backgroundColor: '#3b82f6', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}>
+                                        <Feather name="plus-circle" size={16} color="#fff" />
+                                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Add Bank Guarantee</Text>
+                                    </TouchableOpacity>
+
+                                    {/* Added BGs Section (List View below the form) */}
+                                    {addedBGs.length > 0 && (
+                                        <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
+                                            <Text style={styles.woAssetsTitle}>Added Bank Guarantees ({addedBGs.length})</Text>
+                                            <View style={styles.woAssetsContainer}>
+                                                {addedBGs.map((bg, idx) => (
+                                                    <View key={bg.id || idx} style={styles.woAssetCard}>
+                                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                                <MaterialCommunityIcons name="bank" size={16} color="#3b82f6" />
+                                                                <Text style={styles.woAssetName}>{bg.bankName}</Text>
+                                                            </View>
+                                                            <Text style={{ fontWeight: 'bold', color: '#10b981' }}>₹{bg.amount}</Text>
+                                                        </View>
+
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                                            <Feather name="hash" size={12} color="#6b7280" />
+                                                            <Text style={{ fontSize: 12, color: '#4b5563' }}>{bg.bgNumber}</Text>
+                                                        </View>
+
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                                            <Feather name="calendar" size={12} color="#6b7280" />
+                                                            <Text style={{ fontSize: 11, color: '#6b7280' }}>Exp: {bg.expiryDate}</Text>
+                                                        </View>
+
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ecfdf5', padding: 6, borderRadius: 4 }}>
+                                                            <Feather name="file-text" size={12} color="#059669" />
+                                                            <Text style={{ fontSize: 11, color: '#059669', flex: 1 }} numberOfLines={1}>{bg.document?.name}</Text>
+                                                        </View>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        </View>
+                                    )}
+
+                                </View>
+                            </ScrollView>
+                        </View>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity
+                                style={styles.btnCancel}
+                                onPress={() => setIsBGModalVisible(false)}
+                            >
+                                <Text style={styles.btnCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.btnSaveNext, { backgroundColor: '#10b981' }]}
+                                onPress={handleSubmitBGs}
+                                disabled={addedBGs.length === 0 || isSubmittingBGs}
+                            >
+                                {isSubmittingBGs ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <>
+                                        <Text style={styles.btnSaveNextText}>Submit Guarantees</Text>
+                                        <Feather name="check" size={16} color="#fff" />
                                     </>
                                 )}
                             </TouchableOpacity>
@@ -1320,7 +1741,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 };
 
@@ -1340,14 +1761,58 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#eef1f5' },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     backLink: { marginTop: 10 },
-    scrollView: { flex: 1 },
     scrollContent: { padding: isMobile ? 8 : 16, paddingBottom: 40 },
-    headerCard: { backgroundColor: '#fff', borderRadius: 12, padding: 16, flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, gap: 12 },
-    backButton: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#e5e7eb', justifyContent: 'center', alignItems: 'center', marginRight: 4 },
-    headerIconBox: { backgroundColor: '#dc2626', width: 44, height: 44, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#111827', flexShrink: 1 },
-    headerSubtitleRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, flexShrink: 1 },
-    headerSubtitle: { fontSize: 11, color: '#6b7280', flexShrink: 1 },
+    headerGradient: {
+        paddingBottom: 24,
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        marginHorizontal: -16,
+        marginTop: -16,
+        marginBottom: 16,
+    },
+    headerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingTop: isMobile ? 12 : 20,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    headerTitleContainer: {
+        flex: 1,
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 6,
+    },
+    headerBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+        alignSelf: 'flex-start',
+    },
+    headerBadgeText: {
+        fontSize: 12,
+        color: '#fff',
+        marginLeft: 6,
+        fontWeight: '500',
+    },
+    headerActionsContainer: {
+        paddingHorizontal: 16,
+        marginBottom: 16,
+    },
     headerActions: { flexDirection: 'row', gap: 8, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end', marginTop: isMobile ? 8 : 0 },
     btnOutlineOrange: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#f97316', backgroundColor: '#fff7ed', flex: isMobile ? 1 : 0, alignItems: 'center' },
     btnOutlineTextOrange: { color: '#f97316', fontSize: 11, fontWeight: 'bold' },
@@ -2060,6 +2525,111 @@ const styles = StyleSheet.create({
     selectionTextSelected: {
         color: '#c1272d',
         fontWeight: 'bold',
+    },
+    woAssetsContainer: {
+        marginTop: 16,
+        gap: 12,
+    },
+    woAssetsTitle: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    woAssetCard: {
+        backgroundColor: '#f9fafb',
+        borderRadius: 8,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    woAssetHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 12,
+    },
+    woAssetName: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#1f2937',
+        flex: 1,
+    },
+    btnActionRowAsset: {
+        flexDirection: 'row',
+        gap: 8,
+        flexWrap: 'wrap',
+    },
+    btnActionSecondaryAsset: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#ecfdf5',
+        borderWidth: 1,
+        borderColor: '#10b981',
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+        borderRadius: 6,
+        gap: 4,
+    },
+    btnActionSecondaryTextAsset: {
+        color: '#059669',
+        fontSize: 11,
+        fontWeight: 'bold',
+    },
+    btnActionPrimaryAsset: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#3b82f6',
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+        borderRadius: 6,
+        gap: 4,
+    },
+    btnActionPrimaryTextAsset: {
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: 'bold',
+    },
+    btnUploadBGAsset: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#f97316',
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+        borderRadius: 6,
+        gap: 4,
+    },
+    btnUploadBGTextAsset: {
+        color: '#f97316',
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    emptyAssetsText: {
+        fontSize: 12,
+        color: '#9ca3af',
+        fontStyle: 'italic',
+        marginTop: 8,
+    },
+    fileItemBg: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 8,
+        backgroundColor: '#ecfdf5',
+        borderRadius: 6,
+        marginTop: 6,
+        gap: 6,
+    },
+    fileNameBg: {
+        fontSize: 12,
+        color: '#059669',
+        flex: 1,
     },
 });
 
