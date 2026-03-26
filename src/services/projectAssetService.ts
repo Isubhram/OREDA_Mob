@@ -31,6 +31,10 @@ class ProjectAssetService {
     async saveDraft(data: any): Promise<ApiResponse<ProjectAssetDraftResponse>> {
         return apiClient.post<ProjectAssetDraftResponse>('/project-assets/drafts', data);
     }
+
+    async getFullProjectAsset(id: number): Promise<ApiResponse<any>> {
+        return apiClient.get<any>(`/project-assets/full/${id}`);
+    }
 }
 
 export const projectAssetService = new ProjectAssetService();

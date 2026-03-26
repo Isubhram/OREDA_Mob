@@ -1,18 +1,21 @@
-import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { TouchableOpacity, ActivityIndicator, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProjectScreen from '../screens/ProjectScreen';
 import TenderScreen from '../screens/TenderScreen';
 import IncidentTicketScreen from '../screens/IncidentTicketScreen';
+import WorkOrderScreen from '../screens/WorkOrderScreen';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { authService } from '../services/authService';
 
 export type BottomTabParamList = {
     Dashboard: undefined;
     Project: undefined;
     Tender: undefined;
+    WorkOrder: undefined;
     IncidentTicket: undefined;
 };
 
@@ -20,6 +23,32 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const BottomTabNavigator = () => {
     const insets = useSafeAreaInsets();
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRole = async () => {
+            try {
+                const data = await authService.getAuthData();
+                const role = data?.UserData?.RoleName || data?.UserData?.UserTypeLabel || 'Administrator';
+                setUserRole(role);
+            } catch (error) {
+                console.error('Error fetching user role for tabs:', error);
+                setUserRole('Administrator'); // Fallback
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchRole();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#c55825" />
+            </View>
+        );
+    }
 
     return (
         <Tab.Navigator
@@ -60,8 +89,6 @@ const BottomTabNavigator = () => {
                     <TouchableOpacity
                         onPress={async () => {
                             console.log('Logging out...');
-                            // Clear auth data before navigating to login
-                            const { authService } = require('../services/authService');
                             await authService.logout();
                             navigation.replace('Login');
                         }}
@@ -81,21 +108,37 @@ const BottomTabNavigator = () => {
                     ),
                 }}
             />
+            
+            {userRole !== 'Vendor' && (
+                <>
+                    <Tab.Screen
+                        name="Project"
+                        component={ProjectScreen}
+                        options={{
+                            tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+                                <Ionicons name="briefcase-outline" size={size} color={color} />
+                            ),
+                        }}
+                    />
+                    <Tab.Screen
+                        name="Tender"
+                        component={TenderScreen}
+                        options={{
+                            tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+                                <Ionicons name="document-text-outline" size={size} color={color} />
+                            ),
+                        }}
+                    />
+                </>
+            )}
+
             <Tab.Screen
-                name="Project"
-                component={ProjectScreen}
+                name="WorkOrder"
+                component={WorkOrderScreen}
                 options={{
+                    title: 'Work Orders',
                     tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-                        <Ionicons name="briefcase-outline" size={size} color={color} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="Tender"
-                component={TenderScreen}
-                options={{
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-                        <Ionicons name="document-text-outline" size={size} color={color} />
+                        <MaterialCommunityIcons name="clipboard-text-outline" size={size} color={color} />
                     ),
                 }}
             />
@@ -112,5 +155,6 @@ const BottomTabNavigator = () => {
         </Tab.Navigator>
     );
 };
+
 
 export default BottomTabNavigator;

@@ -9,6 +9,7 @@ let API_BASE_URL_PROD = 'https://assetsapi.tatwa.com/api/v1';
 // API Response type
 export interface ApiResponse<T> {
     Data: T;
+    DeveloperMessage?: string;
     DisplayMessage: string;
     StatusCode: number;
     Success: boolean;
@@ -39,7 +40,15 @@ class ApiClient {
         } else {
             this.baseURL = API_BASE_URL_PROD;
         }
+    }
 
+    getBaseURL(): string {
+        return this.baseURL;
+    }
+
+    getBaseHost(): string {
+        // Remove /api/v1 or similar from the end
+        return __DEV__ ? 'http://192.168.30.243:7301/' : 'https://assetsapi.tatwa.com/';
     }
 
     private isRefreshing = false;

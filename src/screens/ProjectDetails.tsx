@@ -41,7 +41,7 @@ const ProjectDetailsScreen = ({ route, navigation }: any) => {
 	return (
 		<View style={styles.container}>
 			<StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-			<ScrollView showsVerticalScrollIndicator={false}>
+			<ScrollView style={styles.mainScrollView} showsVerticalScrollIndicator={false}>
 				{/* Premium Header with Gradient */}
 				<LinearGradient
 					colors={['#8b1a1a', '#c52525', '#e23f3f']}
@@ -49,8 +49,8 @@ const ProjectDetailsScreen = ({ route, navigation }: any) => {
 				>
 					<SafeAreaView edges={['top', 'left', 'right']}>
 						<View style={styles.headerContent}>
-							<TouchableOpacity 
-								style={styles.backButton} 
+							<TouchableOpacity
+								style={styles.backButton}
 								onPress={() => navigation.goBack()}
 								activeOpacity={0.7}
 							>
@@ -195,6 +195,9 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#f8fafc',
+	},
+	mainScrollView: {
+		flex: 1,
 	},
 	headerGradient: {
 		paddingBottom: 24,

@@ -140,9 +140,9 @@ const ProjectScreen = ({ navigation }: any) => {
 	}
 
 	return (
-		<SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+		<SafeAreaView style={styles.container} edges={['left', 'right']}>
 			<ScrollView
-				contentContainerStyle={styles.mainScrollViewContent}
+				contentContainerStyle={styles.scrollView}
 				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 			>
 				{/* Header Actions */}
@@ -161,51 +161,25 @@ const ProjectScreen = ({ navigation }: any) => {
 							<Feather name='search' size={16} color='#f97316' />
 							<Text style={styles.btnSearchText}>Search Projects</Text>
 						</TouchableOpacity>
-						{/* <TouchableOpacity style={styles.btnAdd}>
-							<Feather name='plus' size={16} color='#ef4444' />
-							<Text style={styles.btnAddText}>Add New Project</Text>
-						</TouchableOpacity> */}
 					</View>
 				</View>
 
 				{/* Summary Cards */}
 				<View style={styles.summaryCardsRow}>
 					<View style={styles.card}>
-						<View style={styles.cardIconBoxRow}>
-							<View style={styles.cardIconBoxRed}>
-								<MaterialIcons name='folder' size={isMobile ? 20 : 24} color='#fff' />
-							</View>
-							<View style={isMobile ? { paddingRight: 24, width: '100%' } : {}}>
-								<Text style={styles.cardTitle} numberOfLines={1}>
-									Total Projects
-								</Text>
-								<Text style={styles.cardSubtitle} numberOfLines={isMobile ? 2 : 1}>
-									All projects across departments
-								</Text>
-							</View>
+						<View style={styles.cardHeaderSmall}>
+							<MaterialIcons name='folder' size={16} color='#dc2626' />
+							<Text style={styles.cardTitleSmall}>Total Projects</Text>
 						</View>
-						<View style={styles.cardBadgeRed}>
-							<Text style={styles.cardBadgeRedText}>{projects.length || 0}</Text>
-						</View>
+						<Text style={styles.cardValueSmall}>{projects.length || 0}</Text>
 					</View>
 
 					<View style={styles.card}>
-						<View style={styles.cardIconBoxRow}>
-							<View style={styles.cardIconBoxOrange}>
-								<MaterialIcons name='currency-rupee' size={isMobile ? 20 : 24} color='#fff' />
-							</View>
-							<View style={isMobile ? { paddingRight: 24, width: '100%' } : {}}>
-								<Text style={styles.cardTitle} numberOfLines={1}>
-									Total Budget
-								</Text>
-								<Text style={styles.cardSubtitle} numberOfLines={isMobile ? 2 : 1}>
-									Allocated across active projects
-								</Text>
-							</View>
+						<View style={styles.cardHeaderSmall}>
+							<MaterialIcons name='currency-rupee' size={16} color='#f97316' />
+							<Text style={styles.cardTitleSmall}>Total Budget</Text>
 						</View>
-						<View style={styles.cardBadgeOrange}>
-							<Text style={styles.cardBadgeOrangeText}>{formatCurrency(totalBudget)}</Text>
-						</View>
+						<Text style={styles.cardValueSmall}>{formatCurrency(totalBudget)}</Text>
 					</View>
 				</View>
 
@@ -259,9 +233,6 @@ const ProjectScreen = ({ navigation }: any) => {
 									<View style={styles.colBudget}>
 										<Text style={styles.tableHeaderText}>Total Budget</Text>
 									</View>
-									<View style={styles.colAction}>
-										<Text style={styles.tableHeaderText}>Action</Text>
-									</View>
 								</View>
 
 								{/* Table Rows */}
@@ -273,9 +244,14 @@ const ProjectScreen = ({ navigation }: any) => {
 												<Text style={styles.cellTextDark}>{index + 1}</Text>
 											</View>
 											<View style={styles.colName}>
-												<Text style={styles.cellTextDark} numberOfLines={2}>
-													{project.Name}
-												</Text>
+												<TouchableOpacity
+													onPress={() => navigation?.navigate('ProjectDetails', { project })}
+													activeOpacity={0.7}
+												>
+													<Text style={styles.cellTextLink} numberOfLines={2}>
+														{project.Name}
+													</Text>
+												</TouchableOpacity>
 											</View>
 											<View style={styles.colFunding}>
 												<View style={[styles.badgeWrapper, { backgroundColor: badgeStyle.bg }]}>
@@ -303,30 +279,13 @@ const ProjectScreen = ({ navigation }: any) => {
 													{formatCurrency(project.TotalBudget)}
 												</Text>
 											</View>
-											<View style={styles.colAction}>
-												<TouchableOpacity
-													style={styles.actionBtnView}
-													onPress={() => navigation?.navigate('ProjectDetails', { project })}
-												>
-													<Feather name='eye' size={14} color='#3b82f6' />
-												</TouchableOpacity>
-												{/* <TouchableOpacity style={styles.actionBtnEdit}>
-													<Feather name='edit-2' size={14} color='#f97316' />
-												</TouchableOpacity>
-												<TouchableOpacity
-													style={styles.actionBtnDelete}
-													onPress={() => handleDeleteProject(project.Id, project.Name)}
-												>
-													<Feather name='trash-2' size={14} color='#ef4444' />
-												</TouchableOpacity> */}
-											</View>
+
 										</View>
 									);
 								})}
 							</View>
 						</ScrollView>
 					)}
-
 					{/* Pagination */}
 					{projects.length > 0 && (
 						<View style={styles.paginationWrapper}>
@@ -356,6 +315,10 @@ const ProjectScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
+	scrollView: {
+		flex: 1,
+		paddingHorizontal: isMobile ? 12 : 24,
+	},
 	container: {
 		flex: 1,
 		backgroundColor: '#eef1f5',
@@ -408,6 +371,7 @@ const styles = StyleSheet.create({
 		alignItems: isMobile ? 'flex-start' : 'center',
 		marginBottom: 24,
 		gap: 16,
+		marginTop: 10,
 	},
 	headerLeft: {
 		flexDirection: 'row',
@@ -426,7 +390,8 @@ const styles = StyleSheet.create({
 		fontSize: 22,
 		fontWeight: 'bold',
 		color: '#111827',
-		marginBottom: 2,
+		marginBottom: 1,
+		marginTop: 1,
 	},
 	headerSubtitle: {
 		fontSize: 13,
@@ -436,6 +401,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 12,
+		width: isMobile ? '100%' : 'auto',
 	},
 	btnSearch: {
 		flexDirection: 'row',
@@ -446,6 +412,7 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 		paddingHorizontal: 16,
 		paddingVertical: 10,
+		flex: 1,
 	},
 	btnSearchText: {
 		color: '#ea580c',
@@ -479,16 +446,30 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: '#fff',
 		borderRadius: 12,
-		padding: isMobile ? 12 : 20,
-		flexDirection: 'row',
-		alignItems: 'center',
+		padding: 12,
 		overflow: 'hidden',
 		// Shadow
 		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
+		shadowOffset: { width: 0, height: 1 },
 		shadowOpacity: 0.04,
-		shadowRadius: 4,
+		shadowRadius: 2,
 		elevation: 2,
+	},
+	cardHeaderSmall: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 4,
+		gap: 6,
+	},
+	cardTitleSmall: {
+		fontSize: 12,
+		fontWeight: '600',
+		color: '#6b7280',
+	},
+	cardValueSmall: {
+		fontSize: 15,
+		fontWeight: 'bold',
+		color: '#111827',
 	},
 	cardIconBoxRow: {
 		flexDirection: isMobile ? 'column' : 'row',
@@ -647,6 +628,12 @@ const styles = StyleSheet.create({
 		color: '#1f2937',
 		fontSize: 13,
 		fontWeight: '500',
+	},
+	cellTextLink: {
+		color: '#2563eb',
+		fontSize: 13,
+		fontWeight: '600',
+		textDecorationLine: 'underline',
 	},
 	cellTextGray: {
 		color: '#6b7280',

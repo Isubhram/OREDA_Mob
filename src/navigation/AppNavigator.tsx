@@ -14,6 +14,7 @@ export type RootStackParamList = {
     Main: undefined; // Now routes to Bottom Tabs instead of Drawer
     ProjectDetails: { project: any };
     TenderDetails: { tenderId: number };
+    WorkOrderDetails: { workOrderId: number };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -27,6 +28,7 @@ const AppNavigator = () => {
                 <Stack.Screen name="Main" component={BottomTabNavigator} />
                 <Stack.Screen name="ProjectDetails" component={ProjectDetailsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="TenderDetails" component={require('../screens/TenderDetailsScreen').default} options={{ headerShown: false }} />
+                <Stack.Screen name="WorkOrderDetails" component={require('../screens/WorkOrderDetailsScreen').default} options={{ headerShown: false }} />
             </Stack.Navigator>
         </NavigationContainer>
     );
