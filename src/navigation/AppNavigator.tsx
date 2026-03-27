@@ -15,6 +15,8 @@ export type RootStackParamList = {
     ProjectDetails: { project: any };
     TenderDetails: { tenderId: number };
     WorkOrderDetails: { workOrderId: number };
+    MaintenanceDetail: { ticketId: number };
+    IncidentDetail: { ticketId: number };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -29,6 +31,8 @@ const AppNavigator = () => {
                 <Stack.Screen name="ProjectDetails" component={ProjectDetailsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="TenderDetails" component={require('../screens/TenderDetailsScreen').default} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkOrderDetails" component={require('../screens/WorkOrderDetailsScreen').default} options={{ headerShown: false }} />
+                <Stack.Screen name="MaintenanceDetail" component={require('../screens/MaintenanceDetailScreen').default} options={{ headerShown: false }} />
+                <Stack.Screen name="IncidentDetail" component={require('../screens/IncidentDetailScreen').default} options={{ headerShown: false }} />
             </Stack.Navigator>
         </NavigationContainer>
     );

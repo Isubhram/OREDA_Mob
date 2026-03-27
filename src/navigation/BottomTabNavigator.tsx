@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProjectScreen from '../screens/ProjectScreen';
 import TenderScreen from '../screens/TenderScreen';
-import IncidentTicketScreen from '../screens/IncidentTicketScreen';
+import MaintenanceScreen from '../screens/MaintenanceScreen';
 import WorkOrderScreen from '../screens/WorkOrderScreen';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,7 +16,7 @@ export type BottomTabParamList = {
     Project: undefined;
     Tender: undefined;
     WorkOrder: undefined;
-    IncidentTicket: undefined;
+    Maintenance: undefined;
 };
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -143,12 +143,12 @@ const BottomTabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="IncidentTicket"
-                component={IncidentTicketScreen}
+                name="Maintenance"
+                component={MaintenanceScreen}
                 options={{
-                    title: 'Tickets',
+                    title: 'Maintenance',
                     tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-                        <MaterialCommunityIcons name="ticket-outline" size={size} color={color} />
+                        <MaterialCommunityIcons name="tools" size={size} color={color} />
                     ),
                 }}
             />

@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Modal, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Modal, Alert, StatusBar, TextInput, Platform, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { workOrderService } from '../services/workOrderService';
 import { WorkOrder } from '../services/tenderService';
 import { LinearGradient } from 'expo-linear-gradient';
-import { projectAssetService } from '../services/projectAssetService';
+import { projectAssetService, DropdownItem } from '../services/projectAssetService';
+import { apiClient } from '../services/apiClient';
+import * as DocumentPicker from 'expo-document-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
+import { authService } from '../services/authService';
+import { Linking } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
@@ -19,10 +26,106 @@ const WorkOrderDetailsScreen = () => {
     const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [userRole, setUserRole] = useState<string>('Vendor'); // Default to Vendor
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+    const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [installDetailsData, setInstallDetailsData] = useState<any>(null);
     const [installDetailsLoading, setInstallDetailsLoading] = useState(false);
+
+    // FILL FORM MODAL STATE
+    const [isFormModalVisible, setIsFormModalVisible] = useState(false);
+    const [currentStep, setCurrentStep] = useState(0);
+    const [isCapturingLocation, setIsCapturingLocation] = useState(false);
+    const [installedAssetId, setInstalledAssetId] = useState<number | null>(null);
+
+    // Selection Modal State
+    const [isSelectionModalVisible, setIsSelectionModalVisible] = useState(false);
+    const [selectionData, setSelectionData] = useState<DropdownItem[]>([]);
+    const [selectionTitle, setSelectionTitle] = useState('');
+    const [selectionKey, setSelectionKey] = useState('');
+
+    // Dropdown Data
+    const [districts, setDistricts] = useState<DropdownItem[]>([]);
+    const [blocks, setBlocks] = useState<DropdownItem[]>([]);
+    const [gps, setGps] = useState<DropdownItem[]>([]);
+    const [villages, setVillages] = useState<DropdownItem[]>([]);
+
+    // Form Data State
+    const [formData, setFormData] = useState({
+        assetId: '', fullName: '', fatherName: '', phoneNumber: '', altPhoneNumber: '', email: '', gender: '', ses: '', caste: '', beneficiaryPhoto: null as any,
+        stateId: 1, districtId: null as number | null, blockId: null as number | null, gpId: null as number | null, villageId: null as number | null, habitation: '', pinCode: '', houseNo: '', areaLocality: '', streetLandmark: '', latitude: '', longitude: '',
+        capacity: '', cmcPeriod: '', installationClass: '', dateOfInstallation: '', dateOfCommissioning: '',
+        installationPhoto: null as any, installationCertificate: null as any, jccDocument: null as any, componentValues: [] as any[],
+    });
+
+    // File Picker Modal State
+    const [isFileSourceVisible, setIsFileSourceVisible] = useState(false);
+    const [onFileSourceSelected, setOnFileSourceSelected] = useState<(asset: any) => void>(() => () => { });
+    const [allowSourceDocuments, setAllowSourceDocuments] = useState(false);
+
+    // BG Upload Modal
+    const [bgModalVisible, setBgModalVisible] = useState(false);
+    const [bgSubmitting, setBgSubmitting] = useState(false);
+    const [bgForm, setBgForm] = useState({
+        BankName: '',
+        BGNumber: '',
+        IssueDate: new Date(),
+        ExpiryDate: new Date(),
+        Amount: '',
+        Document: null as any,
+    });
+    const [showIssueDatePicker, setShowIssueDatePicker] = useState(false);
+    const [showExpiryDatePicker, setShowExpiryDatePicker] = useState(false);
+
+    const pickBGDocument = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['application/pdf', 'image/*'],
+                copyToCacheDirectory: true,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                setBgForm(prev => ({ ...prev, Document: result.assets[0] }));
+            }
+        } catch {
+            Alert.alert('Error', 'Failed to pick document.');
+        }
+    };
+
+    const handleSubmitBG = async () => {
+        if (!bgForm.BankName.trim() || !bgForm.BGNumber.trim() || !bgForm.Amount.trim()) {
+            Alert.alert('Validation', 'Bank Name, BG Number, and Amount are required.');
+            return;
+        }
+        if (!workOrder?.Id) return;
+        setBgSubmitting(true);
+        try {
+            const response = await workOrderService.uploadBankGuarantee(workOrder.Id, {
+                BankName: bgForm.BankName,
+                BGNumber: bgForm.BGNumber,
+                IssueDate: bgForm.IssueDate.toISOString(),
+                ExpiryDate: bgForm.ExpiryDate.toISOString(),
+                Amount: parseFloat(bgForm.Amount),
+                Document: bgForm.Document,
+            });
+            if (response.Data !== undefined || (response as any).DeveloperMessage) {
+                Alert.alert('Success', 'Bank Guarantee uploaded successfully!');
+                setBgModalVisible(false);
+                setBgForm({ BankName: '', BGNumber: '', IssueDate: new Date(), ExpiryDate: new Date(), Amount: '', Document: null });
+                // Refresh work order data
+                const refreshed = await workOrderService.getWorkOrderById(workOrder.Id);
+                if (refreshed.Data) setWorkOrder(refreshed.Data);
+            } else {
+                Alert.alert('Error', (response as any).DisplayMessage || 'Upload failed.');
+            }
+        } catch (err) {
+            console.error('BG upload error:', err);
+            Alert.alert('Error', 'Failed to upload Bank Guarantee.');
+        } finally {
+            setBgSubmitting(false);
+        }
+    };
 
     const handleOpenEyeModal = async (instId: number | null) => {
         if (!instId) {
@@ -46,6 +149,19 @@ const WorkOrderDetailsScreen = () => {
             setInstallDetailsLoading(false);
         }
     };
+
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            try {
+                const authData = await authService.getAuthData();
+                const role = authData?.UserData?.RoleName || authData?.UserData?.UserTypeLabel || 'Vendor';
+                setUserRole(role);
+            } catch (err) {
+                console.error('Error fetching user role:', err);
+            }
+        };
+        fetchUserRole();
+    }, []);
 
     useEffect(() => {
         if (!workOrderId) {
@@ -83,6 +199,194 @@ const WorkOrderDetailsScreen = () => {
         } catch {
             return dateString;
         }
+    };
+
+    // FORM HELPER METHODS
+    useEffect(() => {
+        const fetchDistricts = async () => {
+            const res = await projectAssetService.getDistricts(1);
+            setDistricts(res.Data);
+        };
+        if (isFormModalVisible) fetchDistricts();
+    }, [isFormModalVisible]);
+
+    useEffect(() => {
+        const fetchBlocks = async () => {
+            if (formData.districtId) {
+                const res = await projectAssetService.getBlocks(formData.districtId);
+                setBlocks(res.Data);
+            }
+        };
+        fetchBlocks();
+    }, [formData.districtId]);
+
+    useEffect(() => {
+        const fetchGps = async () => {
+            if (formData.blockId) {
+                const res = await projectAssetService.getGramPanchayats(formData.blockId);
+                setGps(res.Data);
+            }
+        };
+        fetchGps();
+    }, [formData.blockId]);
+
+    useEffect(() => {
+        const fetchVillages = async () => {
+            if (formData.gpId) {
+                const res = await projectAssetService.getVillages(formData.gpId);
+                setVillages(res.Data);
+            }
+        };
+        fetchVillages();
+    }, [formData.gpId]);
+
+    const handleFillForm = (instId: number | null, assetIdValue: number | null) => {
+        if (!workOrder) return;
+        setInstalledAssetId(instId);
+        setFormData(prev => ({ ...prev, assetId: assetIdValue?.toString() || '' }));
+        setCurrentStep(0);
+        setIsFormModalVisible(true);
+    };
+
+    const handleNextStep = async () => {
+        if (!workOrder) return;
+        try {
+            if (currentStep < 6) {
+                setCurrentStep(currentStep + 1);
+            } else {
+                Alert.alert('Success', 'Project Asset Initiation Complete');
+                setIsFormModalVisible(false);
+            }
+        } catch (error) {
+            console.error('Error saving:', error);
+            Alert.alert('Error', 'Failed to save progress');
+        }
+    };
+
+    const updateFormData = (key: string, value: any) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleViewPhotos = (installedAsset: any) => {
+        const photos = [];
+        if (installedAsset.InstallationPhoto) photos.push(installedAsset.InstallationPhoto);
+        if (installedAsset.BeneficiaryPhoto) photos.push(installedAsset.BeneficiaryPhoto);
+        
+        // If there are documents, we could show them as well if they are images
+        if (installedAsset.MaterialVerificationDocuments) {
+            installedAsset.MaterialVerificationDocuments.forEach((doc: any) => {
+                const url = doc.FileUrl || doc.DocumentUrl;
+                if (url && (url.toLowerCase().endsWith('.jpg') || url.toLowerCase().endsWith('.png') || url.toLowerCase().endsWith('.jpeg'))) {
+                    photos.push(url);
+                }
+            });
+        }
+
+        if (photos.length === 0) {
+            Alert.alert('Info', 'No photos available for this installation.');
+            return;
+        }
+
+        const formattedPhotos = photos.map(url => {
+            if (url && !url.startsWith('http')) {
+                return apiClient.getBaseHost() + (url.startsWith('/') ? url.slice(1) : url);
+            }
+            return url;
+        });
+
+        setSelectedImages(formattedPhotos);
+        setIsImageModalVisible(true);
+    };
+
+    const requestCameraPermission = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'Camera access is required to take photos.');
+            return false;
+        }
+        return true;
+    };
+
+    const handleTakePhoto = async (onFileSelected: (asset: any) => void) => {
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) return;
+        try {
+            const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 0.8 });
+            if (!result.canceled) onFileSelected({ uri: result.assets[0].uri, name: result.assets[0].fileName || `photo_${Date.now()}.jpg`, type: 'image/jpeg', mimeType: 'image/jpeg' });
+        } catch (error) { Alert.alert('Error', 'Failed to capture photo'); }
+    };
+
+    const handlePickFromGallery = async (onFileSelected: (asset: any) => void) => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 0.8 });
+            if (!result.canceled) onFileSelected({ uri: result.assets[0].uri, name: result.assets[0].fileName || `photo_${Date.now()}.jpg`, type: 'image/jpeg', mimeType: 'image/jpeg' });
+        } catch (error) { Alert.alert('Error', 'Failed to pick from gallery'); }
+    };
+
+    const handleAddFileChoice = (callback: (asset: any) => void, allowDocs = false) => {
+        setOnFileSourceSelected(() => callback);
+        setAllowSourceDocuments(allowDocs);
+        setIsFileSourceVisible(true);
+    };
+
+    const handleGetCurrentLocation = async () => {
+        setIsCapturingLocation(true);
+        try {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') return Alert.alert('Denied', 'Permission to access location was denied');
+            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+            updateFormData('latitude', loc.coords.latitude.toString());
+            updateFormData('longitude', loc.coords.longitude.toString());
+            Alert.alert('Captured', `Lat: ${loc.coords.latitude}\nLon: ${loc.coords.longitude}`);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to capture location');
+        } finally {
+            setIsCapturingLocation(false);
+        }
+    };
+
+    const renderFormField = (label: string, key: string, icon: any, placeholder: string = '', required: boolean = false) => (
+        <View style={styles.formFieldRow}>
+            <Text style={styles.formFieldLabel}>{label}{required && <Text style={{ color: '#dc2626' }}> *</Text>}</Text>
+            <View style={styles.inputWrapper}>
+                {icon && <View style={styles.inputIcon}>{icon}</View>}
+                <TextInput style={styles.input} placeholder={placeholder} value={(formData as any)[key]} onChangeText={(text) => updateFormData(key, text)} />
+            </View>
+        </View>
+    );
+
+    const renderDropdownField = (label: string, key: string, data: DropdownItem[], icon: any, required: boolean = false, disabled: boolean = false) => {
+        const selectedItem = data.find(item => item.Id === (formData as any)[key]);
+        const openSelection = () => {
+            if (disabled) return;
+            if (data.length === 0) return Alert.alert('Info', `No ${label} available`);
+            setSelectionData(data);
+            setSelectionTitle(`Select ${label}`);
+            setSelectionKey(key);
+            setIsSelectionModalVisible(true);
+        };
+        return (
+            <View style={styles.formFieldRow}>
+                <Text style={styles.formFieldLabel}>{label}{required && <Text style={{ color: '#dc2626' }}> *</Text>}</Text>
+                <TouchableOpacity style={[styles.dropdownTrigger, disabled && { backgroundColor: '#f3f4f6' }]} onPress={openSelection} activeOpacity={disabled ? 1 : 0.7}>
+                    <Text style={[styles.dropdownValue, disabled && { color: '#9ca3af' }]}>{selectedItem?.Name || `Select ${label}`}</Text>
+                    <MaterialCommunityIcons name="unfold-more-horizontal" size={20} color="#9ca3af" />
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    const getModalHeader = () => {
+        const titles = [
+            { title: 'Initiate Project Asset', subtitle: 'Set up initial details' },
+            { title: 'Initiate Project Asset', subtitle: 'Beneficiary & Location' },
+            { title: 'Initiate Project Asset', subtitle: 'Beneficiary & Location' },
+            { title: 'Initiate Project Asset', subtitle: 'Technical Details' },
+            { title: 'Initiate Project Asset', subtitle: 'Inst. Location' },
+            { title: 'Initiate Project Asset', subtitle: 'Documents Upload' },
+            { title: 'Initiate Project Asset', subtitle: 'Component Asset Details' },
+        ];
+        return titles[currentStep] || titles[0];
     };
 
     if (loading) {
@@ -351,32 +655,57 @@ const WorkOrderDetailsScreen = () => {
                                                             </View>
 
                                                             <View style={styles.instActionsRow}>
-                                                                {inst.MaterialVerificationStatus === 'Approved' ? (
+                                                                <TouchableOpacity
+                                                                    style={styles.iconBtnOutline}
+                                                                    onPress={() => handleOpenEyeModal(inst.WorkOrderInstalledAssetDetailsId)}
+                                                                >
+                                                                    <Feather name="eye" size={14} color="#3b82f6" />
+                                                                </TouchableOpacity>
+
+                                                                {inst.MaterialVerificationStatus === 'Approved' || inst.MaterialVerificationStatus === 'Rejected' ? (
                                                                     <>
-                                                                        <TouchableOpacity
-                                                                            style={styles.iconBtnOutline}
-                                                                            onPress={() => handleOpenEyeModal(inst.WorkOrderInstalledAssetDetailsId)}
+                                                                        <TouchableOpacity 
+                                                                            style={styles.btnViewPhotos}
+                                                                            onPress={() => handleViewPhotos(inst)}
                                                                         >
-                                                                            <Feather name="eye" size={14} color="#3b82f6" />
+                                                                            <Feather name="image" size={14} color="#fff" />
+                                                                            <Text style={styles.btnActionText}>VIEW PHOTOS</Text>
                                                                         </TouchableOpacity>
-                                                                        <TouchableOpacity style={styles.iconBtnOutlineOrange}>
-                                                                            <Ionicons name="location-outline" size={14} color="#ea580c" />
-                                                                        </TouchableOpacity>
-                                                                        <View style={styles.verifiedStamp}>
-                                                                            <Ionicons name="checkmark-circle-outline" size={14} color="#10b981" />
-                                                                            <Text style={styles.verifiedStampText}>VERIFIED BY OREDA</Text>
-                                                                        </View>
+                                                                        {inst.MaterialVerificationStatus === 'Approved' && (
+                                                                            <View style={styles.verifiedStamp}>
+                                                                                <Ionicons name="checkmark-circle-outline" size={14} color="#10b981" />
+                                                                                <Text style={styles.verifiedStampText}>VERIFIED BY OREDA</Text>
+                                                                            </View>
+                                                                        )}
                                                                     </>
                                                                 ) : (
                                                                     <>
-                                                                        <TouchableOpacity style={styles.modUploadBtn}>
-                                                                            <Feather name="edit" size={12} color="#ea580c" />
-                                                                            <Text style={styles.modUploadText}>MODIFY / UPLOAD</Text>
-                                                                        </TouchableOpacity>
-                                                                        <TouchableOpacity style={styles.fillFormBtn}>
-                                                                            <Ionicons name="cube-outline" size={14} color="#3b82f6" />
-                                                                            <Text style={styles.fillFormText}>FILL FORM</Text>
-                                                                        </TouchableOpacity>
+                                                                        {(userRole.toLowerCase().includes('admin') || userRole.toLowerCase().includes('staff')) ? (
+                                                                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                                                                <TouchableOpacity style={styles.btnApprove} onPress={() => Alert.alert('Approve', `Approving installation #${inst.Id}`)}>
+                                                                                    <Feather name="check-circle" size={14} color="#fff" />
+                                                                                    <Text style={styles.btnActionText}>APPROVE</Text>
+                                                                                </TouchableOpacity>
+                                                                                <TouchableOpacity style={styles.btnReject} onPress={() => Alert.alert('Reject', `Rejecting installation #${inst.Id}`)}>
+                                                                                    <Feather name="x-circle" size={14} color="#fff" />
+                                                                                    <Text style={styles.btnActionText}>REJECT</Text>
+                                                                                </TouchableOpacity>
+                                                                            </View>
+                                                                        ) : (
+                                                                            <>
+                                                                                <TouchableOpacity style={styles.modUploadBtn}>
+                                                                                    <Feather name="edit" size={12} color="#ea580c" />
+                                                                                    <Text style={styles.modUploadText}>MODIFY / UPLOAD</Text>
+                                                                                </TouchableOpacity>
+                                                                                <TouchableOpacity 
+                                                                                    style={styles.fillFormBtn}
+                                                                                    onPress={() => handleFillForm(inst.WorkOrderInstalledAssetDetailsId || inst.Id || null, asset.AssetId || asset.Id || null)}
+                                                                                >
+                                                                                    <Ionicons name="cube-outline" size={14} color="#3b82f6" />
+                                                                                    <Text style={styles.fillFormText}>FILL FORM</Text>
+                                                                                </TouchableOpacity>
+                                                                            </>
+                                                                        )}
                                                                     </>
                                                                 )}
                                                             </View>
@@ -443,8 +772,139 @@ const WorkOrderDetailsScreen = () => {
                         <Text style={{ marginVertical: 20, color: '#9ca3af', paddingHorizontal: 4 }}>No Bank Guarantees uploaded.</Text>
                     )}
 
+                    {/* Add Bank Guarantee Button */}
+                    <TouchableOpacity style={styles.addBgBtn} onPress={() => setBgModalVisible(true)}>
+                        <Feather name="plus-circle" size={16} color="#fff" />
+                        <Text style={styles.addBgBtnText}>ADD BANK GUARANTEE</Text>
+                    </TouchableOpacity>
+
                 </View>
             </ScrollView>
+
+            {/* BANK GUARANTEE UPLOAD MODAL */}
+            <Modal
+                visible={bgModalVisible}
+                animationType="slide"
+                presentationStyle="pageSheet"
+                onRequestClose={() => setBgModalVisible(false)}
+            >
+                <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalHeaderTitle}>Upload Bank Guarantee</Text>
+                        <TouchableOpacity onPress={() => setBgModalVisible(false)} style={styles.modalCloseBtn}>
+                            <Feather name="x" size={24} color="#4b5563" />
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView contentContainerStyle={styles.modalScroll}>
+
+                        <View style={styles.modalSection}>
+                            <Text style={styles.modalSectionTitle}>Bank Details</Text>
+
+                            <Text style={styles.formLabel}>Bank Name *</Text>
+                            <TextInput
+                                style={styles.formInput}
+                                placeholder="e.g. State Bank of India"
+                                value={bgForm.BankName}
+                                onChangeText={v => setBgForm(p => ({ ...p, BankName: v }))}
+                            />
+
+                            <Text style={styles.formLabel}>BG Number *</Text>
+                            <TextInput
+                                style={styles.formInput}
+                                placeholder="e.g. BG/2024/001"
+                                value={bgForm.BGNumber}
+                                onChangeText={v => setBgForm(p => ({ ...p, BGNumber: v }))}
+                            />
+
+                            <Text style={styles.formLabel}>Amount (₹) *</Text>
+                            <TextInput
+                                style={styles.formInput}
+                                placeholder="e.g. 50000"
+                                keyboardType="numeric"
+                                value={bgForm.Amount}
+                                onChangeText={v => setBgForm(p => ({ ...p, Amount: v }))}
+                            />
+
+                            <Text style={styles.formLabel}>Issue Date</Text>
+                            <TouchableOpacity style={styles.formInput} onPress={() => setShowIssueDatePicker(true)}>
+                                <Text style={{ color: '#374151' }}>{bgForm.IssueDate.toDateString()}</Text>
+                            </TouchableOpacity>
+                            {showIssueDatePicker && (
+                                <DateTimePicker
+                                    value={bgForm.IssueDate}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={(_, date) => {
+                                        setShowIssueDatePicker(false);
+                                        if (date) setBgForm(p => ({ ...p, IssueDate: date }));
+                                    }}
+                                />
+                            )}
+
+                            <Text style={styles.formLabel}>Expiry Date</Text>
+                            <TouchableOpacity style={styles.formInput} onPress={() => setShowExpiryDatePicker(true)}>
+                                <Text style={{ color: '#374151' }}>{bgForm.ExpiryDate.toDateString()}</Text>
+                            </TouchableOpacity>
+                            {showExpiryDatePicker && (
+                                <DateTimePicker
+                                    value={bgForm.ExpiryDate}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={(_, date) => {
+                                        setShowExpiryDatePicker(false);
+                                        if (date) setBgForm(p => ({ ...p, ExpiryDate: date }));
+                                    }}
+                                />
+                            )}
+
+                            <Text style={styles.formLabel}>Document (PDF / Image)</Text>
+                            <TouchableOpacity style={styles.docPickerBtn} onPress={pickBGDocument}>
+                                <Feather name="upload" size={18} color="#ea580c" />
+                                <Text style={styles.docPickerText}>
+                                    {bgForm.Document ? bgForm.Document.name : 'Tap to select document'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity
+                            style={[styles.submitBtn, bgSubmitting && { opacity: 0.6 }]}
+                            onPress={handleSubmitBG}
+                            disabled={bgSubmitting}
+                        >
+                            {bgSubmitting ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <>
+                                    <Feather name="upload-cloud" size={18} color="#fff" />
+                                    <Text style={styles.submitBtnText}>SUBMIT BANK GUARANTEE</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+
+                    </ScrollView>
+                </SafeAreaView>
+            </Modal>
+
+            {/* FULL DETAILS MODAL */}
+            <Modal
+                visible={isImageModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setIsImageModalVisible(false)}
+            >
+                <View style={styles.imageModalOverlay}>
+                    <TouchableOpacity style={styles.imageModalClose} onPress={() => setIsImageModalVisible(false)}>
+                        <Feather name="x" size={30} color="#fff" />
+                    </TouchableOpacity>
+                    <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+                        {selectedImages.map((uri, index) => (
+                            <View key={index} style={styles.imageSlide}>
+                                <Image source={{ uri }} style={styles.fullImage} resizeMode="contain" />
+                            </View>
+                        ))}
+                    </ScrollView>
+                </View>
+            </Modal>
 
             {/* FULL DETAILS MODAL */}
             <Modal
@@ -746,6 +1206,75 @@ const styles = StyleSheet.create({
     modalFieldValueDark: { fontSize: 12, color: '#111827', fontWeight: 'bold', flex: 1.5, textAlign: 'right' },
     docActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa' },
     docActionText: { fontSize: 11, fontWeight: 'bold', color: '#ea580c' },
+
+    // BG Upload Button & Form
+    addBgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#c1272d', paddingVertical: 14, borderRadius: 12, marginTop: 16 },
+    addBgBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
+    formLabel: { fontSize: 12, color: '#374151', fontWeight: '600', marginBottom: 6, marginTop: 12 },
+    formInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
+    docPickerBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa', borderRadius: 8, padding: 14, marginTop: 2 },
+    docPickerText: { fontSize: 13, color: '#ea580c', flex: 1 },
+    submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#c1272d', paddingVertical: 16, borderRadius: 12, marginTop: 8, marginBottom: 20 },
+    submitBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+
+    // Form Field Styles
+    formGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 },
+    formFieldRow: { width: isMobile ? '100%' : '50%', paddingHorizontal: 8, marginBottom: 16 },
+    formFieldLabel: { fontSize: 12, fontWeight: '500', color: '#4b5563', marginBottom: 8 },
+    inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 12 },
+    inputIcon: { marginRight: 10 },
+    input: { flex: 1, paddingVertical: 10, fontSize: 14, color: '#111827' },
+    dropdownTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 10 },
+    dropdownValue: { fontSize: 14, color: '#111827' },
+    sectionDivider: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 20, gap: 12, borderWidth: 1, borderColor: '#f1f5f9' },
+    sectionBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center' },
+    sectionBadgeText: { fontSize: 12, fontWeight: 'bold', color: '#3b82f6' },
+    sectionLabel: { fontSize: 14, fontWeight: 'bold', color: '#3b82f6' },
+    photoUploadBox: { width: 120, height: 120, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb', marginTop: 8 },
+    photoUploadIcon: { marginBottom: 8 },
+    photoUploadText: { fontSize: 10, color: '#9ca3af' },
+    btnUploadBG: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#f97316' },
+    btnUploadBGText: { fontSize: 12, color: '#f97316', fontWeight: 'bold' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+    modalContent: { width: isMobile ? '95%' : '80%', maxHeight: '90%', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 5 },
+    modalHeaderIcon: { width: 40, height: 40, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+    modalSubtitle: { fontSize: 12, color: '#fff', opacity: 0.8 },
+    modalBody: { flex: 1, backgroundColor: '#f8fafc' },
+    modalFooter: { flexDirection: 'row', padding: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb', backgroundColor: '#fff', justifyContent: 'space-between' },
+    btnCancel: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
+    btnCancelText: { color: '#6b7280', fontSize: 14, fontWeight: 'bold' },
+    btnSaveNext: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#3b82f6', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, gap: 8 },
+    btnSaveNextText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+    selectionOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+    selectionContent: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: '80%' },
+    selectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    selectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#111827' },
+    selectionScroll: { padding: 8 },
+    selectionItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    selectionText: { fontSize: 14, color: '#374151' },
+    selectionTextSelected: { fontWeight: 'bold', color: '#c1272d' },
+    selectionContentWide: { backgroundColor: '#fff', margin: 20, borderRadius: 16, padding: 0, overflow: 'hidden' },
+    sourceGrid: { flexDirection: 'row', padding: 20, gap: 20, justifyContent: 'center' },
+    sourceItem: { alignItems: 'center', gap: 8 },
+    sourceIconBox: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
+    sourceText: { fontSize: 12, fontWeight: '500', color: '#4b5563' },
+    sourceCancelBtn: { padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', alignItems: 'center' },
+    sourceCancelText: { color: '#ef4444', fontWeight: 'bold', fontSize: 14 },
+    fieldContainer: { marginBottom: 16 },
+    fieldLabelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+    fieldLabel: { fontSize: 12, fontWeight: 'bold', color: '#6b7280', marginLeft: 6 },
+    fieldValueBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 12 },
+    fieldIconBox: { width: 32, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+    fieldValueText: { fontSize: 14, fontWeight: '600', color: '#111827', flex: 1 },
+    imageModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
+    imageModalClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 10 },
+    imageSlide: { width, height: '100%', justifyContent: 'center', alignItems: 'center' },
+    fullImage: { width: '90%', height: '80%' },
+    btnApprove: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#059669', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4 },
+    btnReject: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#dc2626', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4 },
+    btnViewPhotos: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#3b82f6', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4, marginTop: 8 },
+    btnActionText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
 });
 
 export default WorkOrderDetailsScreen;

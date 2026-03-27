@@ -11,8 +11,8 @@ import {
     StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { incidentService, IncidentTicket } from '../services/incidentService';
-import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { maintenanceService, IncidentTicket, ScheduleTicket } from '../services/maintenanceService';
+import { MaterialCommunityIcons, Feather, Ionicons } from '@expo/vector-icons';
 import SkeletonLoader from '../components/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
@@ -26,21 +26,32 @@ const STATUS_FILTERS = [
     { id: 'closed', label: 'Closed', color: '#10b981' },
 ];
 
-const IncidentTicketScreen = () => {
-    const [tickets, setTickets] = useState<IncidentTicket[]>([]);
+import { useNavigation } from '@react-navigation/native';
+
+const MaintenanceScreen = () => {
+    const navigation = useNavigation<any>();
+    const [activeTab, setActiveTab] = useState<'Incident' | 'Schedule'>('Incident');
+    const [incidentTickets, setIncidentTickets] = useState<IncidentTicket[]>([]);
+    const [scheduleTickets, setScheduleTickets] = useState<ScheduleTicket[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
 
-    const fetchTickets = async () => {
+    const fetchData = async () => {
         try {
-            const response = await incidentService.getIncidentTickets();
-            // Safeguard to handle both full response and direct Data access if needed
-            const data = (response as any).Data || response;
-            setTickets(Array.isArray(data) ? data : []);
+            setLoading(true);
+            if (activeTab === 'Incident') {
+                const response = await maintenanceService.getIncidentTickets();
+                const data = (response as any).Data || response;
+                setIncidentTickets(Array.isArray(data) ? data : []);
+            } else {
+                const response = await maintenanceService.getScheduleTickets();
+                const data = (response as any).Data || response;
+                setScheduleTickets(Array.isArray(data) ? data : []);
+            }
         } catch (error) {
-            console.error('Error loading tickets:', error);
+            console.error(`Error loading ${activeTab} tickets:`, error);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -48,41 +59,63 @@ const IncidentTicketScreen = () => {
     };
 
     useEffect(() => {
-        fetchTickets();
-    }, []);
+        setSearchQuery('');
+        setActiveFilter('all');
+        fetchData();
+    }, [activeTab]);
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchTickets();
+        fetchData();
     };
 
     const filteredTickets = useMemo(() => {
-        return tickets.filter(ticket => {
-            const subject = ticket.Subject || '';
+        const currentTickets = activeTab === 'Incident' ? incidentTickets : (scheduleTickets as any[]);
+        
+        return currentTickets.filter(ticket => {
             const ticketNumber = ticket.TicketNumber || '';
-            const projectName = ticket.ProjectName || '';
-            const reasonCategory = ticket.ReasonCategory || '';
             const status = ticket.Status || '';
+            const searchLower = searchQuery.toLowerCase();
 
-            const matchesSearch = 
-                ticketNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                reasonCategory.toLowerCase().includes(searchQuery.toLowerCase());
+            let matchesSearch = false;
+            if (activeTab === 'Incident') {
+                const subject = ticket.Subject || '';
+                const projectName = ticket.ProjectName || '';
+                const reasonCategory = ticket.ReasonCategory || '';
+                matchesSearch = 
+                    ticketNumber.toLowerCase().includes(searchLower) ||
+                    subject.toLowerCase().includes(searchLower) ||
+                    projectName.toLowerCase().includes(searchLower) ||
+                    reasonCategory.toLowerCase().includes(searchLower);
+            } else {
+                const assetName = ticket.AssetName || '';
+                const vendorName = ticket.VendorCompanyName || '';
+                const beneficiaryName = ticket.BeneficiaryName || '';
+                const location = ticket.InstallationLocation || '';
+                matchesSearch = 
+                    ticketNumber.toLowerCase().includes(searchLower) ||
+                    assetName.toLowerCase().includes(searchLower) ||
+                    vendorName.toLowerCase().includes(searchLower) ||
+                    beneficiaryName.toLowerCase().includes(searchLower) ||
+                    location.toLowerCase().includes(searchLower);
+            }
             
             const matchesFilter = activeFilter === 'all' || 
                 status.toLowerCase().replace(/\s/g, '') === activeFilter.toLowerCase();
             
             return matchesSearch && matchesFilter;
         });
-    }, [tickets, searchQuery, activeFilter]);
+    }, [activeTab, incidentTickets, scheduleTickets, searchQuery, activeFilter]);
 
     const getStatusStyles = (status: string) => {
-        const s = status.toLowerCase().replace(/\s/g, '');
+        const s = (status || '').toLowerCase().replace(/\s/g, '');
         switch (s) {
-            case 'open': return { bg: '#fee2e2', text: '#ef4444' };
+            case 'open':
+            case 'created': return { bg: '#fee2e2', text: '#ef4444' };
             case 'inprogress': return { bg: '#ffedd5', text: '#f59e0b' };
-            case 'closed': return { bg: '#d1fae5', text: '#10b981' };
+            case 'closed':
+            case 'resolved': return { bg: '#d1fae5', text: '#10b981' };
+            case 'rejected': return { bg: '#f1f5f9', text: '#64748b' };
             default: return { bg: '#f1f5f9', text: '#64748b' };
         }
     };
@@ -92,7 +125,8 @@ const IncidentTicketScreen = () => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-IN', {
             day: '2-digit',
-            month: 'short'
+            month: 'short',
+            year: 'numeric'
         });
     };
 
@@ -100,8 +134,12 @@ const IncidentTicketScreen = () => {
         <View style={styles.headerContainer}>
             <View style={styles.topHeader}>
                 <View>
-                    <Text style={styles.title}>Incidents</Text>
-                    <Text style={styles.subtitle}>{filteredTickets.length} active issues</Text>
+                    <Text style={styles.title}>Maintenance</Text>
+                    <Text style={styles.subtitle}>
+                        {activeTab === 'Incident' 
+                            ? `${filteredTickets.length} Incident Tickets` 
+                            : `${filteredTickets.length} Scheduled Maintenance`}
+                    </Text>
                 </View>
                 <TouchableOpacity style={styles.notificationBtn}>
                     <Feather name="bell" size={20} color="#1e293b" />
@@ -109,50 +147,82 @@ const IncidentTicketScreen = () => {
                 </TouchableOpacity>
             </View>
 
+            {/* Tab Switcher */}
+            <View style={styles.tabContainer}>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'Incident' && styles.activeTab]} 
+                    onPress={() => setActiveTab('Incident')}
+                >
+                    <MaterialCommunityIcons 
+                        name="alert-octagon-outline" 
+                        size={18} 
+                        color={activeTab === 'Incident' ? '#fff' : '#64748b'} 
+                    />
+                    <Text style={[styles.tabText, activeTab === 'Incident' && styles.activeTabText]}>Incidents</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'Schedule' && styles.activeTab]} 
+                    onPress={() => setActiveTab('Schedule')}
+                >
+                    <MaterialCommunityIcons 
+                        name="calendar-clock" 
+                        size={18} 
+                        color={activeTab === 'Schedule' ? '#fff' : '#64748b'} 
+                    />
+                    <Text style={[styles.tabText, activeTab === 'Schedule' && styles.activeTabText]}>Schedules</Text>
+                </TouchableOpacity>
+            </View>
+
             <View style={styles.searchContainer}>
                 <Feather name="search" size={18} color="#94a3b8" style={styles.searchIcon} />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Search tickets, subjects..."
+                    placeholder={activeTab === 'Incident' ? "Search incidents..." : "Search schedules..."}
                     placeholderTextColor="#94a3b8"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
             </View>
 
-            <View style={styles.filterWrapper}>
-                <FlatList
-                    data={STATUS_FILTERS}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    keyExtractor={item => item.id}
-                    contentContainerStyle={styles.filterList}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity 
-                            style={[
-                                styles.filterChip,
-                                activeFilter === item.id && { backgroundColor: item.color }
-                            ]}
-                            onPress={() => setActiveFilter(item.id)}
-                        >
-                            <Text style={[
-                                styles.filterLabel,
-                                activeFilter === item.id && styles.filterLabelActive
-                            ]}>
-                                {item.label}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                />
-            </View>
+            {activeTab === 'Incident' && (
+                <View style={styles.filterWrapper}>
+                    <FlatList
+                        data={STATUS_FILTERS}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={item => item.id}
+                        contentContainerStyle={styles.filterList}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity 
+                                style={[
+                                    styles.filterChip,
+                                    activeFilter === item.id && { backgroundColor: item.color }
+                                ]}
+                                onPress={() => setActiveFilter(item.id)}
+                            >
+                                <Text style={[
+                                    styles.filterLabel,
+                                    activeFilter === item.id && styles.filterLabelActive
+                                ]}>
+                                    {item.label}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                </View>
+            )}
         </View>
     );
 
-    const renderTicketCard = ({ item: ticket }: { item: IncidentTicket }) => {
+    const renderIncidentCard = (ticket: IncidentTicket) => {
         const { bg, text } = getStatusStyles(ticket.Status);
         
         return (
-            <TouchableOpacity style={styles.card} activeOpacity={0.7}>
+            <TouchableOpacity 
+                style={styles.card} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('IncidentDetail', { ticketId: ticket.Id })}
+            >
                 <View style={styles.cardTop}>
                     <View style={styles.tagRow}>
                         <View style={[styles.statusTag, { backgroundColor: bg }]}>
@@ -186,12 +256,61 @@ const IncidentTicketScreen = () => {
         );
     };
 
+    const renderScheduleCard = (ticket: ScheduleTicket) => {
+        const { bg, text } = getStatusStyles(ticket.Status);
+        
+        return (
+            <TouchableOpacity 
+                style={styles.card} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('MaintenanceDetail', { ticketId: ticket.Id })}
+            >
+                <View style={styles.cardTop}>
+                    <View style={styles.tagRow}>
+                        <View style={[styles.statusTag, { backgroundColor: bg }]}>
+                            <Text style={[styles.statusTagText, { color: text }]}>{ticket.Status}</Text>
+                        </View>
+                        <View style={styles.categoryTag}>
+                            <Text style={styles.categoryTagText}>{ticket.AssetName}</Text>
+                        </View>
+                    </View>
+                </View>
+
+                <View style={styles.scheduleInfo}>
+                    <View style={styles.scheduleRow}>
+                        <Feather name="calendar" size={12} color="#c1272d" />
+                        <Text style={styles.scheduleDate}>{formatDate(ticket.ScheduledMaintenanceDate)}</Text>
+                    </View>
+                    
+                    <View style={styles.vendorRow}>
+                        <Feather name="user" size={12} color="#64748b" />
+                        <Text style={styles.vendorName} numberOfLines={1}>{ticket.VendorCompanyName || 'No Vendor'}</Text>
+                    </View>
+
+                    <Text style={styles.beneficiaryName} numberOfLines={1}>{ticket.BeneficiaryName}</Text>
+                    
+                    <View style={styles.locationRow}>
+                        <Feather name="map-pin" size={12} color="#94a3b8" />
+                        <Text style={styles.locationText} numberOfLines={2}>{ticket.InstallationLocation}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.cardFooter}>
+                    <Text style={styles.ticketId}>{ticket.TicketNumber}</Text>
+                    <View style={[styles.moreIconBox, { backgroundColor: '#3b82f6' }]}>
+                        <Feather name="chevron-right" size={14} color="#fff" />
+                    </View>
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
                 <MaterialCommunityIcons name="ticket-confirmation-outline" size={40} color="#cbd5e1" />
             </View>
-            <Text style={styles.emptyTitle}>No tickets found</Text>
+            <Text style={styles.emptyTitle}>No {activeTab.toLowerCase()}s found</Text>
             <Text style={styles.emptySubtitle}>Try adjusting your search or filters</Text>
             <TouchableOpacity 
                 style={styles.resetBtn}
@@ -228,7 +347,7 @@ const IncidentTicketScreen = () => {
             <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
             <FlatList
                 data={filteredTickets}
-                renderItem={renderTicketCard}
+                renderItem={({ item }) => (activeTab === 'Incident' ? renderIncidentCard(item as IncidentTicket) : renderScheduleCard(item as ScheduleTicket))}
                 keyExtractor={item => item.Id.toString()}
                 numColumns={2}
                 ListHeaderComponent={renderHeader}
@@ -267,7 +386,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20
+        marginBottom: 16
     },
     title: { 
         fontSize: 28, 
@@ -306,6 +425,39 @@ const styles = StyleSheet.create({
         backgroundColor: '#ef4444',
         borderWidth: 2,
         borderColor: '#fff'
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#f1f5f9',
+        borderRadius: 14,
+        padding: 4,
+        marginBottom: 16,
+        gap: 4
+    },
+    tab: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: 10,
+        gap: 8
+    },
+    activeTab: {
+        backgroundColor: '#c1272d',
+        elevation: 2,
+        shadowColor: '#c1272d',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    tabText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#64748b'
+    },
+    activeTabText: {
+        color: '#fff'
     },
     searchContainer: {
         flexDirection: 'row',
@@ -432,6 +584,47 @@ const styles = StyleSheet.create({
         height: 40, // Fixed height for 2 lines
         marginBottom: 8
     },
+    scheduleInfo: {
+        gap: 8,
+        marginBottom: 12
+    },
+    scheduleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6
+    },
+    vendorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 2
+    },
+    vendorName: {
+        fontSize: 12,
+        color: '#64748b',
+        fontWeight: '600'
+    },
+    scheduleDate: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#c1272d'
+    },
+    beneficiaryName: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#1e293b'
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 4
+    },
+    locationText: {
+        fontSize: 10,
+        color: '#64748b',
+        flex: 1,
+        lineHeight: 14
+    },
     projectWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -453,9 +646,11 @@ const styles = StyleSheet.create({
         borderTopColor: '#f1f5f9'
     },
     ticketId: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 'bold',
-        color: '#94a3b8'
+        color: '#94a3b8',
+        flex: 1,
+        marginRight: 4
     },
     moreIconBox: {
         width: 28,
@@ -519,4 +714,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default IncidentTicketScreen;
+export default MaintenanceScreen;
