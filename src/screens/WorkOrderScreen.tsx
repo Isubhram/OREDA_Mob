@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Dimensions, SafeAreaView } from 'react-native';
 import { tenderService, Tender, WorkOrder } from '../services/tenderService';
 import { workOrderService } from '../services/workOrderService';
+import { authService } from '../services/authService';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { MaterialIcons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -18,7 +19,21 @@ const WorkOrderScreen = ({ navigation }: any) => {
     const loadWorkOrders = async () => {
         try {
             setError(null);
-            const response = await workOrderService.getWorkOrders(1, 100);
+            
+            // Get user's district for filtering
+            const authData = await authService.getAuthData();
+            let userDistrictId: number | undefined;
+            
+            // Only apply district filter if AccessLevel is NOT 'All'
+            const accessLevel = authData?.UserData?.AccessLevelLabel || authData?.UserData?.AccessLevel;
+            
+            if (accessLevel !== 'All' && authData?.UserData?.Locations && authData.UserData.Locations.length > 0) {
+                // Find primary location or just use the first one
+                const primaryLoc = authData.UserData.Locations.find((l: any) => l.IsPrimary) || authData.UserData.Locations[0];
+                userDistrictId = primaryLoc.DistrictId;
+            }
+            
+            const response = await workOrderService.getWorkOrders(1, 100, userDistrictId);
             
             if (response.Data) {
                 setWorkOrders(response.Data);

@@ -32,8 +32,16 @@ class ProjectAssetService {
         return apiClient.post<ProjectAssetDraftResponse>('/project-assets/drafts', data);
     }
 
+    async getDraftById(id: number): Promise<ApiResponse<any>> {
+        return apiClient.get<any>(`/project-assets/drafts/${id}`);
+    }
+
     async getFullProjectAsset(id: number): Promise<ApiResponse<any>> {
         return apiClient.get<any>(`/project-assets/full/${id}`);
+    }
+
+    async uploadMaterialVerification(formData: FormData): Promise<ApiResponse<any>> {
+        return apiClient.post<any>('/project-assets/material-verification', formData);
     }
 }
 

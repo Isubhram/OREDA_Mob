@@ -23,18 +23,18 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const BottomTabNavigator = () => {
     const insets = useSafeAreaInsets();
-    const [userRole, setUserRole] = useState<string | null>(null);
+    const [userRoleId, setUserRoleId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchRole = async () => {
             try {
                 const data = await authService.getAuthData();
-                const role = data?.UserData?.RoleName || data?.UserData?.UserTypeLabel || 'Administrator';
-                setUserRole(role);
+                const roleId = data?.UserData?.RoleId || data?.UserData?.roleId || data?.UserData?.UserTypeId;
+                setUserRoleId(roleId ? String(roleId) : '2'); // Default to 2 (Vendor) as fallback if not found
             } catch (error) {
                 console.error('Error fetching user role for tabs:', error);
-                setUserRole('Administrator'); // Fallback
+                setUserRoleId('1'); // Fallback to Admin if error
             } finally {
                 setIsLoading(false);
             }
@@ -108,8 +108,9 @@ const BottomTabNavigator = () => {
                     ),
                 }}
             />
-            
-            {userRole !== 'Vendor' && (
+
+            {/* Only show Project & Tender for Staff/Admin (Vendor ID is 2) */}
+            {userRoleId !== '2' && userRoleId !== '5' && (
                 <>
                     <Tab.Screen
                         name="Project"

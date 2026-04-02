@@ -26,7 +26,7 @@ const WorkOrderDetailsScreen = () => {
     const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [userRole, setUserRole] = useState<string>('Vendor'); // Default to Vendor
+    const [userRoleId, setUserRoleId] = useState<string>('2'); // Default to 2 (Vendor) as fallback
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
@@ -39,6 +39,14 @@ const WorkOrderDetailsScreen = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [isCapturingLocation, setIsCapturingLocation] = useState(false);
     const [installedAssetId, setInstalledAssetId] = useState<number | null>(null);
+    const [draftId, setDraftId] = useState<number | null>(null);
+    const [loadingDraft, setLoadingDraft] = useState(false);
+    
+    // RAW MATERIAL MODAL STATE
+    const [isRmModalVisible, setIsRmModalVisible] = useState(false);
+    const [selectedInstRM, setSelectedInstRM] = useState<{ inst: any, asset: any } | null>(null);
+    const [rmPhotos, setRmPhotos] = useState<any[]>([]);
+    const [isSavingRM, setIsSavingRM] = useState(false);
 
     // Selection Modal State
     const [isSelectionModalVisible, setIsSelectionModalVisible] = useState(false);
@@ -58,6 +66,11 @@ const WorkOrderDetailsScreen = () => {
         stateId: 1, districtId: null as number | null, blockId: null as number | null, gpId: null as number | null, villageId: null as number | null, habitation: '', pinCode: '', houseNo: '', areaLocality: '', streetLandmark: '', latitude: '', longitude: '',
         capacity: '', cmcPeriod: '', installationClass: '', dateOfInstallation: '', dateOfCommissioning: '',
         installationPhoto: null as any, installationCertificate: null as any, jccDocument: null as any, componentValues: [] as any[],
+        // Step mapping data
+        projectId: null as number | null,
+        workOrderId: null as number | null,
+        assetTypeId: null as number | null,
+        assetSubTypeId: null as number | null,
     });
 
     // File Picker Modal State
@@ -138,7 +151,9 @@ const WorkOrderDetailsScreen = () => {
         try {
             const res = await projectAssetService.getFullProjectAsset(instId);
             if (res.Data) {
-                setInstallDetailsData(res.Data);
+                // Defensive check if API returns an array instead of an object
+                const details = Array.isArray(res.Data) ? res.Data[0] : res.Data;
+                setInstallDetailsData(details);
             } else {
                 Alert.alert('Notice', 'No extended details found for this installation.');
             }
@@ -150,12 +165,18 @@ const WorkOrderDetailsScreen = () => {
         }
     };
 
+    const safeVal = (val: any) => {
+        if (val === null || val === undefined) return '-';
+        if (typeof val === 'object') return 'N/A'; // Prevent crash by not rendering objects
+        return String(val);
+    };
+
     useEffect(() => {
         const fetchUserRole = async () => {
             try {
                 const authData = await authService.getAuthData();
-                const role = authData?.UserData?.RoleName || authData?.UserData?.UserTypeLabel || 'Vendor';
-                setUserRole(role);
+                const roleId = authData?.UserData?.RoleId || authData?.UserData?.roleId || authData?.UserData?.UserTypeId;
+                setUserRoleId(roleId ? String(roleId) : '2');
             } catch (err) {
                 console.error('Error fetching user role:', err);
             }
@@ -163,41 +184,45 @@ const WorkOrderDetailsScreen = () => {
         fetchUserRole();
     }, []);
 
+    const fetchWorkOrderDetails = async () => {
+        if (!workOrderId) return;
+        try {
+            setLoading(true);
+            const response = await workOrderService.getWorkOrderById(workOrderId);
+            if (response.Data) {
+                setWorkOrder(response.Data);
+            } else {
+                setError(response.DisplayMessage || 'Failed to load Work Order details.');
+            }
+        } catch (err) {
+            console.error('Error loading Work Order Details:', err);
+            setError('An error occurred while fetching details.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (!workOrderId) {
             setError('No Work Order ID provided.');
             setLoading(false);
             return;
         }
-        const fetchWorkOrderDetails = async () => {
-            try {
-                setLoading(true);
-                const response = await workOrderService.getWorkOrderById(workOrderId);
-                if (response.Data) {
-                    setWorkOrder(response.Data);
-                } else {
-                    setError(response.DisplayMessage || 'Failed to load Work Order details.');
-                }
-            } catch (err) {
-                console.error('Error loading Work Order Details:', err);
-                setError('An error occurred while fetching details.');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchWorkOrderDetails();
     }, [workOrderId]);
 
-    const formatDate = (dateString?: string) => {
+    const formatDate = (dateString?: any) => {
         if (!dateString) return 'N/A';
         try {
             const date = new Date(dateString);
+            if (isNaN(date.getTime())) return typeof dateString === 'string' ? dateString : 'N/A';
             const day = date.getDate().toString().padStart(2, '0');
-            const month = date.toLocaleString('default', { month: 'short' });
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[date.getMonth()];
             const year = date.getFullYear().toString().slice(-2);
             return `${day} ${month} ${year}`;
         } catch {
-            return dateString;
+            return typeof dateString === 'string' ? dateString : 'N/A';
         }
     };
 
@@ -240,26 +265,145 @@ const WorkOrderDetailsScreen = () => {
         fetchVillages();
     }, [formData.gpId]);
 
-    const handleFillForm = (instId: number | null, assetIdValue: number | null) => {
+    const handleFillForm = async (instId: number | null, assetIdValue: number | null, existingDraftId?: number | null) => {
         if (!workOrder) return;
         setInstalledAssetId(instId);
-        setFormData(prev => ({ ...prev, assetId: assetIdValue?.toString() || '' }));
-        setCurrentStep(0);
+        setDraftId(existingDraftId || null);
+
+        if (existingDraftId) {
+            setLoadingDraft(true);
+            try {
+                const res = await projectAssetService.getDraftById(existingDraftId);
+                if (res.Data) {
+                    const draft = res.Data;
+                    const step1 = draft.Step1 || {};
+                    const step2 = draft.Step2 || {};
+                    const step3 = draft.Step3 || {};
+                    const step4 = draft.Step4 || {};
+                    const step5 = draft.Step5 || {};
+                    const step6 = draft.Step6 || {};
+
+                    setFormData(prev => ({
+                        ...prev,
+                        assetId: assetIdValue?.toString() || step1.AssetId?.toString() || '',
+                        projectId: step1.ProjectId || workOrder.ProjectId || null,
+                        workOrderId: step1.WorkOrderId || workOrder.Id || null,
+                        assetTypeId: step1.AssetTypeId || null,
+                        assetSubTypeId: step1.AssetSubTypeId || null,
+                        // Step 2 mapping
+                        fullName: step2.FullName || '',
+                        fatherName: step2.FatherName || '',
+                        phoneNumber: step2.PhoneNumber || '',
+                        email: step2.Email || '',
+                        gender: step2.Gender || '',
+                        caste: step2.Caste || '',
+                        // Step 3 mapping
+                        districtId: step3.DistrictId || null,
+                        blockId: step3.BlockId || null,
+                        gpId: step3.GpId || null,
+                        villageId: step3.VillageId || null,
+                        pinCode: step3.PinCode || '',
+                        areaLocality: step3.AreaLocality || '',
+                        // Step 4 mapping
+                        capacity: step4.Capacity || '',
+                        cmcPeriod: step4.CmcPeriod || '',
+                        // Step 5 mapping
+                        latitude: step5.Latitude?.toString() || '',
+                        longitude: step5.Longitude?.toString() || '',
+                        // Add more as needed
+                    }));
+                    setCurrentStep(draft.CurrentStep ? draft.CurrentStep - 1 : 0);
+                }
+            } catch (e) {
+                console.error('Error fetching draft:', e);
+                Alert.alert('Error', 'Failed to load existing draft.');
+            } finally {
+                setLoadingDraft(false);
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                assetId: assetIdValue?.toString() || '',
+                projectId: workOrder.ProjectId || null,
+                workOrderId: workOrder.Id || null,
+                assetTypeId: workOrder.Assets?.find(a => a.AssetId === assetIdValue)?.AssetType?.[0]?.Id || null,
+                assetSubTypeId: workOrder.Assets?.find(a => a.AssetId === assetIdValue)?.AssetType?.[0]?.AssetSubType?.[0]?.Id || null,
+            }));
+            setCurrentStep(0);
+        }
         setIsFormModalVisible(true);
     };
 
     const handleNextStep = async () => {
         if (!workOrder) return;
         try {
+            // Prepare draft payload
+            const payload: any = {
+                Id: draftId || 0,
+                ProjectId: formData.projectId,
+                WorkOrderId: formData.workOrderId,
+                WorkOrderInstalledAssetId: installedAssetId,
+                CurrentStep: currentStep + 1,
+            };
+
+            // Add step-specific data
+            if (currentStep === 0) {
+                payload.Step1 = {
+                    ProjectId: formData.projectId,
+                    WorkOrderId: formData.workOrderId,
+                    WorkOrderInstalledAssetId: installedAssetId,
+                    AssetId: parseInt(formData.assetId),
+                    AssetTypeId: formData.assetTypeId,
+                    AssetSubTypeId: formData.assetSubTypeId,
+                };
+            } else if (currentStep === 1) {
+                payload.Step2 = {
+                    FullName: formData.fullName,
+                    FatherName: formData.fatherName,
+                    PhoneNumber: formData.phoneNumber,
+                    Email: formData.email,
+                    Gender: formData.gender,
+                    Caste: formData.caste,
+                };
+            } else if (currentStep === 2) {
+                payload.Step3 = {
+                    DistrictId: formData.districtId,
+                    BlockId: formData.blockId,
+                    GpId: formData.gpId,
+                    VillageId: formData.villageId,
+                    PinCode: formData.pinCode,
+                    AreaLocality: formData.areaLocality,
+                };
+            } else if (currentStep === 3) {
+              payload.Step4 = {
+                  Capacity: formData.capacity,
+                  CmcPeriod: formData.cmcPeriod,
+              };
+            } else if (currentStep === 4) {
+              payload.Step5 = {
+                  Latitude: parseFloat(formData.latitude),
+                  Longitude: parseFloat(formData.longitude),
+              };
+            }
+
+            // Save draft
+            const res = await projectAssetService.saveDraft(payload);
+            if (res.Data && res.Data.Data && res.Data.Data.Id) {
+                setDraftId(res.Data.Data.Id);
+            }
+
             if (currentStep < 6) {
                 setCurrentStep(currentStep + 1);
             } else {
-                Alert.alert('Success', 'Project Asset Initiation Complete');
-                setIsFormModalVisible(false);
+                Alert.alert(
+                    'Success', 
+                    'Installation details have been captured successfully.',
+                    [{ text: 'OK', onPress: () => setIsFormModalVisible(false) }]
+                );
             }
         } catch (error) {
-            console.error('Error saving:', error);
-            Alert.alert('Error', 'Failed to save progress');
+            console.error('Error saving draft:', error);
+            Alert.alert('Error', 'Failed to save progress. Please try again.');
         }
     };
 
@@ -329,6 +473,70 @@ const WorkOrderDetailsScreen = () => {
         setIsFileSourceVisible(true);
     };
 
+    const handleOpenRMModal = (inst: any, asset: any) => {
+        setSelectedInstRM({ inst, asset });
+        const existingPhotos = inst.MaterialVerificationDocuments?.map((doc: any) => {
+            let url = doc.FileUrl || doc.DocumentUrl;
+            if (url && !url.startsWith('http')) {
+                url = apiClient.getBaseHost() + (url.startsWith('/') ? url.slice(1) : url);
+            }
+            return {
+                uri: url,
+                isExisting: true,
+                id: doc.Id
+            };
+        }) || [];
+        setRmPhotos(existingPhotos);
+        setIsRmModalVisible(true);
+    };
+
+    const handleSaveRM = async () => {
+        if (!selectedInstRM) return;
+        setIsSavingRM(true);
+        try {
+            const formData = new FormData();
+            formData.append('WorkOrderInstalledAssetDetailsId', selectedInstRM.inst.WorkOrderInstalledAssetDetailsId || selectedInstRM.inst.Id);
+            
+            // Only upload new photos
+            const newPhotos = rmPhotos.filter(p => !p.isExisting);
+            newPhotos.forEach((photo, index) => {
+                formData.append('Files', {
+                    uri: photo.uri,
+                    name: photo.name || `rm_photo_${index}.jpg`,
+                    type: photo.type || 'image/jpeg'
+                } as any);
+            });
+
+            if (newPhotos.length === 0) {
+                Alert.alert('Info', 'No new photos to upload.');
+                setIsRmModalVisible(false);
+                return;
+            }
+
+            const res = await projectAssetService.uploadMaterialVerification(formData);
+            if (res.Success) {
+                Alert.alert('Success', 'Raw material photos uploaded successfully.');
+                setIsRmModalVisible(false);
+                // Refresh work order data
+                fetchWorkOrderDetails();
+            }
+        } catch (error: any) {
+            console.error('Error saving RM:', error);
+            const errorMsg = error.DisplayMessage || error.message || 'Network error. Please check your internet connection.';
+            Alert.alert('Error', errorMsg);
+        } finally {
+            setIsSavingRM(false);
+        }
+    };
+
+    const handleAddRMPhoto = (asset: any) => {
+        setRmPhotos(prev => [...prev, { ...asset, isExisting: false }]);
+    };
+
+    const handleRemoveRMPhoto = (index: number) => {
+        setRmPhotos(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleGetCurrentLocation = async () => {
         setIsCapturingLocation(true);
         try {
@@ -378,13 +586,13 @@ const WorkOrderDetailsScreen = () => {
 
     const getModalHeader = () => {
         const titles = [
-            { title: 'Initiate Project Asset', subtitle: 'Set up initial details' },
-            { title: 'Initiate Project Asset', subtitle: 'Beneficiary & Location' },
-            { title: 'Initiate Project Asset', subtitle: 'Beneficiary & Location' },
-            { title: 'Initiate Project Asset', subtitle: 'Technical Details' },
-            { title: 'Initiate Project Asset', subtitle: 'Inst. Location' },
-            { title: 'Initiate Project Asset', subtitle: 'Documents Upload' },
-            { title: 'Initiate Project Asset', subtitle: 'Component Asset Details' },
+            { title: 'Asset Information', subtitle: 'Verify device details' },
+            { title: 'Beneficiary Details', subtitle: 'Basic information' },
+            { title: 'Beneficiary Address', subtitle: 'Installation location' },
+            { title: 'Technical Details', subtitle: 'Dynamic parameters' },
+            { title: 'GPS Coordinates', subtitle: 'Geofencing setup' },
+            { title: 'Documents Upload', subtitle: 'Proof of installation' },
+            { title: 'Component Assets', subtitle: 'Dynamic sub-assets' },
         ];
         return titles[currentStep] || titles[0];
     };
@@ -417,6 +625,205 @@ const WorkOrderDetailsScreen = () => {
 
     const uploadedBgAmount = workOrder.BankGuarantees?.reduce((sum: number, bg: any) => sum + (bg.Amount || 0), 0) || 0;
     const bgTargetAmount = (workOrder.WOValue || 0) * ((workOrder.BGValuePercentage || 0) / 100);
+
+    const renderStepContent = () => {
+        switch (currentStep) {
+            case 0: // Asset Info
+                const selectedAsset = workOrder?.Assets?.find(a => a.AssetId.toString() === formData.assetId);
+                const assetType = selectedAsset?.AssetType?.[0];
+                const assetSubType = assetType?.AssetSubType?.[0];
+
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <View style={styles.sectionDivider}>
+                            <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>1</Text></View>
+                            <Text style={styles.sectionLabel}>Asset Information</Text>
+                        </View>
+                        
+                        <View style={styles.formGrid}>
+                            <View style={styles.formFieldRow}>
+                                <Text style={styles.formFieldLabel}>Project Name</Text>
+                                <View style={styles.fieldValueBox}>
+                                    <Text style={styles.fieldValueText}>{workOrder?.ProjectName || 'N/A'}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.formFieldRow}>
+                                <Text style={styles.formFieldLabel}>Work Order</Text>
+                                <View style={styles.fieldValueBox}>
+                                    <Text style={styles.fieldValueText}>{workOrder?.WONumber || 'N/A'}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.formFieldRow}>
+                                <Text style={styles.formFieldLabel}>Asset Name</Text>
+                                <View style={styles.fieldValueBox}>
+                                    <View style={styles.fieldIconBox}>
+                                        <MaterialCommunityIcons name="cube-outline" size={18} color="#ea580c" />
+                                    </View>
+                                    <Text style={styles.fieldValueText}>{selectedAsset?.AssetName || 'N/A'}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.formFieldRow}>
+                                <Text style={styles.formFieldLabel}>Asset Type</Text>
+                                <View style={styles.fieldValueBox}>
+                                    <Text style={styles.fieldValueText}>{assetType?.Name || 'N/A'}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.formFieldRow}>
+                                <Text style={styles.formFieldLabel}>Asset Sub Type</Text>
+                                <View style={styles.fieldValueBox}>
+                                    <Text style={styles.fieldValueText}>{assetSubType?.Name || 'N/A'}</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                );
+
+            case 1: // Beneficiary Details
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <View style={styles.sectionDivider}>
+                            <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>2</Text></View>
+                            <Text style={styles.sectionLabel}>Beneficiary Information</Text>
+                        </View>
+                        <View style={styles.formGrid}>
+                            {renderFormField("Full Name", 'fullName', <Feather name="user" size={16} color="#9ca3af" />, "Enter Full Name", true)}
+                            {renderFormField("Father/Spouse Name", 'fatherName', <Feather name="users" size={16} color="#9ca3af" />, "Enter Father/Spouse Name", true)}
+                            {renderFormField("Phone Number", 'phoneNumber', <Feather name="phone" size={16} color="#9ca3af" />, "Enter Phone Number", true)}
+                            {renderFormField("Email Address", 'email', <Feather name="mail" size={16} color="#9ca3af" />, "Enter Email Address")}
+                            {renderFormField("Gender", 'gender', <MaterialCommunityIcons name="gender-male-female" size={16} color="#9ca3af" />, "e.g. Male/Female")}
+                            {renderFormField("Caste", 'caste', <Feather name="tag" size={16} color="#9ca3af" />, "Enter Category/Caste")}
+                        </View>
+                        <Text style={styles.formFieldLabel}>Beneficiary Photo</Text>
+                        <TouchableOpacity style={styles.photoUploadBox} onPress={() => handleAddFileChoice((asset) => updateFormData('beneficiaryPhoto', asset))}>
+                            {formData.beneficiaryPhoto ? (
+                                <Image source={{ uri: formData.beneficiaryPhoto.uri }} style={{ width: '100%', height: '100%', borderRadius: 8 }} />
+                            ) : (
+                                <>
+                                    <Feather name="camera" size={24} color="#9ca3af" style={styles.photoUploadIcon} />
+                                    <Text style={styles.photoUploadText}>Click to Capture</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                );
+
+            case 2: // Address Details
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <View style={styles.sectionDivider}>
+                            <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>3</Text></View>
+                            <Text style={styles.sectionLabel}>Beneficiary Address</Text>
+                        </View>
+                        <View style={styles.formGrid}>
+                            {renderDropdownField("District", 'districtId', districts, <Feather name="map-pin" size={16} color="#9ca3af" />, true)}
+                            {renderDropdownField("Block", 'blockId', blocks, <Feather name="map" size={16} color="#9ca3af" />, true, !formData.districtId)}
+                            {renderDropdownField("Gram Panchayat", 'gpId', gps, <Feather name="home" size={16} color="#9ca3af" />, true, !formData.blockId)}
+                            {renderDropdownField("Village", 'villageId', villages, <Feather name="map" size={16} color="#9ca3af" />, true, !formData.gpId)}
+                            {renderFormField("PIN Code", 'pinCode', <Feather name="hash" size={16} color="#9ca3af" />, "6-digit PIN", true)}
+                            {renderFormField("Area / Locality", 'areaLocality', <Feather name="map" size={16} color="#9ca3af" />, "Enter area/locality")}
+                        </View>
+                    </View>
+                );
+
+            case 3: // Technical Details
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <View style={styles.sectionDivider}>
+                            <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>4</Text></View>
+                            <Text style={styles.sectionLabel}>Technical Information</Text>
+                        </View>
+                        <View style={styles.formGrid}>
+                            {renderFormField("Capacity", 'capacity', <Feather name="zap" size={16} color="#9ca3af" />, "e.g. 5kW")}
+                            {renderFormField("CMC Period", 'cmcPeriod', <Feather name="shield" size={16} color="#9ca3af" />, "In Years")}
+                        </View>
+                    </View>
+                );
+
+            case 4: // GPS Coordinates
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <View style={styles.sectionDivider}>
+                            <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>5</Text></View>
+                            <Text style={styles.sectionLabel}>Geotagging Details</Text>
+                        </View>
+                        <View style={{ marginTop: 10 }}>
+                            <Text style={styles.formFieldLabel}>Current Latitude & Longitude</Text>
+                            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end' }}>
+                                <View style={{ flex: 1 }}>{renderFormField("Latitude", 'latitude', <Feather name="navigation" size={16} color="#9ca3af" />, "Lat")}</View>
+                                <View style={{ flex: 1 }}>{renderFormField("Longitude", 'longitude', <Feather name="navigation-2" size={16} color="#9ca3af" />, "Long")}</View>
+                                <TouchableOpacity 
+                                    style={{ height: 44, width: 44, borderRadius: 8, backgroundColor: '#c1272d', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}
+                                    onPress={handleGetCurrentLocation}
+                                    disabled={isCapturingLocation}
+                                >
+                                    {isCapturingLocation ? <ActivityIndicator size="small" color="#fff" /> : <Feather name="map-pin" size={18} color="#fff" />}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                );
+
+            case 5: // Documents Upload
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <View style={styles.sectionDivider}>
+                            <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>6</Text></View>
+                            <Text style={styles.sectionLabel}>Proof of Installation</Text>
+                        </View>
+                        <View style={styles.formGrid}>
+                            <View style={{ width: '100%', marginBottom: 20 }}>
+                                <Text style={styles.formFieldLabel}>Installation Photo</Text>
+                                <TouchableOpacity style={[styles.photoUploadBox, { width: '100%' }]} onPress={() => handleAddFileChoice((asset) => updateFormData('installationPhoto', asset))}>
+                                    {formData.installationPhoto ? (
+                                        <Image source={{ uri: formData.installationPhoto.uri }} style={{ width: '100%', height: '100%', borderRadius: 8 }} />
+                                    ) : (
+                                        <><Feather name="camera" size={24} color="#9ca3af" /><Text style={styles.photoUploadText}>Capture Site Photo</Text></>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                            
+                            <View style={{ width: '100%', marginBottom: 16 }}>
+                                <Text style={styles.formFieldLabel}>Installation Certificate (PDF/Image)</Text>
+                                <TouchableOpacity style={styles.docPickerBtn} onPress={() => handleAddFileChoice((asset) => updateFormData('installationCertificate', asset), true)}>
+                                    <Feather name="file-text" size={18} color="#ea580c" />
+                                    <Text style={styles.docPickerText}>{formData.installationCertificate?.name || 'Pick Certificate'}</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={{ width: '100%', marginBottom: 16 }}>
+                                <Text style={styles.formFieldLabel}>JCC Document (PDF/Image)</Text>
+                                <TouchableOpacity style={styles.docPickerBtn} onPress={() => handleAddFileChoice((asset) => updateFormData('jccDocument', asset), true)}>
+                                    <Feather name="file-text" size={18} color="#ea580c" />
+                                    <Text style={styles.docPickerText}>{formData.jccDocument?.name || 'Pick JCC Document'}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                );
+
+            case 6: // Components
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <View style={styles.sectionDivider}>
+                            <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>7</Text></View>
+                            <Text style={styles.sectionLabel}>Component Asset Details</Text>
+                        </View>
+                        <Text style={{ textAlign: 'center', marginVertical: 40, color: '#9ca3af' }}>No dynamic components required for this asset.</Text>
+                    </View>
+                );
+
+            default: 
+                return (
+                    <View style={styles.modalBodyPadding}>
+                        <Text>Unknown Step: {currentStep}</Text>
+                    </View>
+                );
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -657,7 +1064,7 @@ const WorkOrderDetailsScreen = () => {
                                                             <View style={styles.instActionsRow}>
                                                                 <TouchableOpacity
                                                                     style={styles.iconBtnOutline}
-                                                                    onPress={() => handleOpenEyeModal(inst.WorkOrderInstalledAssetDetailsId)}
+                                                                    onPress={() => handleOpenEyeModal(inst.WorkOrderInstalledAssetDetailsId || inst.Id)}
                                                                 >
                                                                     <Feather name="eye" size={14} color="#3b82f6" />
                                                                 </TouchableOpacity>
@@ -680,7 +1087,7 @@ const WorkOrderDetailsScreen = () => {
                                                                     </>
                                                                 ) : (
                                                                     <>
-                                                                        {(userRole.toLowerCase().includes('admin') || userRole.toLowerCase().includes('staff')) ? (
+                                                                        {(userRoleId === '5' || userRoleId === '1') ? (
                                                                             <View style={{ flexDirection: 'row', gap: 8 }}>
                                                                                 <TouchableOpacity style={styles.btnApprove} onPress={() => Alert.alert('Approve', `Approving installation #${inst.Id}`)}>
                                                                                     <Feather name="check-circle" size={14} color="#fff" />
@@ -693,13 +1100,16 @@ const WorkOrderDetailsScreen = () => {
                                                                             </View>
                                                                         ) : (
                                                                             <>
-                                                                                <TouchableOpacity style={styles.modUploadBtn}>
+                                                                                <TouchableOpacity 
+                                                                                    style={styles.modUploadBtn} 
+                                                                                    onPress={() => handleOpenRMModal(inst, asset)}
+                                                                                >
                                                                                     <Feather name="edit" size={12} color="#ea580c" />
                                                                                     <Text style={styles.modUploadText}>MODIFY / UPLOAD</Text>
                                                                                 </TouchableOpacity>
                                                                                 <TouchableOpacity 
                                                                                     style={styles.fillFormBtn}
-                                                                                    onPress={() => handleFillForm(inst.WorkOrderInstalledAssetDetailsId || inst.Id || null, asset.AssetId || asset.Id || null)}
+                                                                                    onPress={() => handleFillForm(inst.WorkOrderInstalledAssetDetailsId || inst.Id || null, asset.AssetId || asset.Id || null, inst.WorkOrderInstalledAssetDraftId)}
                                                                                 >
                                                                                     <Ionicons name="cube-outline" size={14} color="#3b82f6" />
                                                                                     <Text style={styles.fillFormText}>FILL FORM</Text>
@@ -718,7 +1128,10 @@ const WorkOrderDetailsScreen = () => {
                                         <Text style={{ textAlign: 'center', marginVertical: 20, color: '#9ca3af' }}>No installations found.</Text>
                                     )}
 
-                                    <TouchableOpacity style={styles.addAnotherInstBtn}>
+                                    <TouchableOpacity 
+                                        style={styles.addAnotherInstBtn}
+                                        onPress={() => handleFillForm(null, asset.AssetId || asset.Id || null)}
+                                    >
                                         <Feather name="plus" size={14} color="#ea580c" />
                                         <Text style={styles.addAnotherInstText}>ADD ANOTHER INSTALLATION</Text>
                                     </TouchableOpacity>
@@ -906,11 +1319,10 @@ const WorkOrderDetailsScreen = () => {
                 </View>
             </Modal>
 
-            {/* FULL DETAILS MODAL */}
             <Modal
                 visible={isModalVisible}
                 animationType="slide"
-                presentationStyle="pageSheet"
+                transparent={false}
                 onRequestClose={() => setIsModalVisible(false)}
             >
                 <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
@@ -928,25 +1340,24 @@ const WorkOrderDetailsScreen = () => {
                         </View>
                     ) : installDetailsData ? (
                         <ScrollView contentContainerStyle={styles.modalScroll}>
-
                             {/* 1. Project Asset */}
                             <View style={styles.modalSection}>
                                 <Text style={styles.modalSectionTitle}>Project Asset</Text>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Project Name:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.ProjectName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.ProjectName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Asset Name:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.AssetName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.AssetName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Vendor Name:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.VendorName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.VendorName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Beneficiary:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.BeneficiaryName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.BeneficiaryName)}</Text>
                                 </View>
                             </View>
 
@@ -955,27 +1366,27 @@ const WorkOrderDetailsScreen = () => {
                                 <Text style={styles.modalSectionTitle}>Installation Location</Text>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>State:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.StateName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.StateName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>District:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.DistrictName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.DistrictName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Block:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.BlockName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.BlockName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Gram Panchayat:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.GramPanchayatName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.GramPanchayatName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Village:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.VillageName || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.VillageName)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Pin Code:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.PinCode || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.PinCode)}</Text>
                                 </View>
                             </View>
 
@@ -984,7 +1395,7 @@ const WorkOrderDetailsScreen = () => {
                                 <Text style={styles.modalSectionTitle}>Installation Details</Text>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Status:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.InstallationStatus || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.InstallationStatus)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Date of Installation:</Text>
@@ -996,11 +1407,11 @@ const WorkOrderDetailsScreen = () => {
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>CMC Period (Years):</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.CmcPeriodInYears || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.CmcPeriodInYears)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Verification Status:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.VerificationStatus || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.VerificationStatus)}</Text>
                                 </View>
                             </View>
 
@@ -1010,19 +1421,19 @@ const WorkOrderDetailsScreen = () => {
                                     <Text style={styles.modalSectionTitle}>Beneficiary Details</Text>
                                     <View style={styles.modalFieldRow}>
                                         <Text style={styles.modalFieldLabel}>Full Name:</Text>
-                                        <Text style={styles.modalFieldValue}>{installDetailsData.Beneficiary?.FullName || '-'}</Text>
+                                        <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.Beneficiary?.FullName)}</Text>
                                     </View>
                                     <View style={styles.modalFieldRow}>
                                         <Text style={styles.modalFieldLabel}>Father/Spouse:</Text>
-                                        <Text style={styles.modalFieldValue}>{installDetailsData.Beneficiary?.FatherOrSpouseName || '-'}</Text>
+                                        <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.Beneficiary?.FatherOrSpouseName)}</Text>
                                     </View>
                                     <View style={styles.modalFieldRow}>
                                         <Text style={styles.modalFieldLabel}>Phone Number:</Text>
-                                        <Text style={styles.modalFieldValue}>{installDetailsData.Beneficiary?.PhoneNumber || '-'}</Text>
+                                        <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.Beneficiary?.PhoneNumber)}</Text>
                                     </View>
                                     <View style={styles.modalFieldRow}>
                                         <Text style={styles.modalFieldLabel}>Email:</Text>
-                                        <Text style={styles.modalFieldValue}>{installDetailsData.Beneficiary?.Email || '-'}</Text>
+                                        <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.Beneficiary?.Email)}</Text>
                                     </View>
                                 </View>
                             )}
@@ -1032,22 +1443,22 @@ const WorkOrderDetailsScreen = () => {
                                 <Text style={styles.modalSectionTitle}>Tender & Work Order</Text>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Tender Number:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.Tender?.TenderNumber || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.Tender?.TenderNumber)}</Text>
                                 </View>
                                 <View style={styles.modalFieldRow}>
                                     <Text style={styles.modalFieldLabel}>Work Order No:</Text>
-                                    <Text style={styles.modalFieldValue}>{installDetailsData.ProjectAsset?.WorkOrderNumber || '-'}</Text>
+                                    <Text style={styles.modalFieldValue}>{safeVal(installDetailsData.ProjectAsset?.WorkOrderNumber)}</Text>
                                 </View>
                             </View>
 
                             {/* 6. Asset Components */}
-                            {installDetailsData.AssetComponents?.Categories?.map((cat: any, cIdx: number) => (
+                            {Array.isArray(installDetailsData.AssetComponents?.Categories) && installDetailsData.AssetComponents.Categories.map((cat: any, cIdx: number) => (
                                 <View key={`cat-${cIdx}`} style={styles.modalSection}>
-                                    <Text style={styles.modalSectionTitle}>{cat.CategoryName || 'Asset Component'}</Text>
-                                    {cat.Headers?.map((header: any, hIdx: number) => (
+                                    <Text style={styles.modalSectionTitle}>{safeVal(cat.CategoryName) || 'Asset Component'}</Text>
+                                    {Array.isArray(cat.Headers) && cat.Headers.map((header: any, hIdx: number) => (
                                         <View key={`head-${hIdx}`} style={styles.modalFieldRow}>
-                                            <Text style={styles.modalFieldLabel}>{header.HeaderName}:</Text>
-                                            <Text style={styles.modalFieldValueDark}>{header.DisplayValue || '-'}</Text>
+                                            <Text style={styles.modalFieldLabel}>{safeVal(header.HeaderName)}:</Text>
+                                            <Text style={styles.modalFieldValueDark}>{safeVal(header.DisplayValue)}</Text>
                                         </View>
                                     ))}
                                 </View>
@@ -1075,11 +1486,274 @@ const WorkOrderDetailsScreen = () => {
                                     </TouchableOpacity>
                                 </View>
                             </View>
-
                         </ScrollView>
-                    ) : null}
+                    ) : (
+                        <View style={styles.centerContainer}>
+                            <Feather name="alert-circle" size={40} color="#9ca3af" />
+                            <Text style={{ marginTop: 12, color: '#6b7280', fontSize: 16 }}>No Details Found</Text>
+                            <Text style={{ marginTop: 4, color: '#9ca3af', textAlign: 'center', paddingHorizontal: 40 }}>
+                                We couldn't retrieve the extended details for this record at this time.
+                            </Text>
+                        </View>
+                    )}
                 </SafeAreaView>
             </Modal>
+
+            {/* FILL FORM MODAL */}
+            <Modal
+                visible={isFormModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setIsFormModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <LinearGradient colors={['#c1272d', '#8b1a1a']} style={styles.modalHeader}>
+                            <View style={styles.modalHeaderIcon}>
+                                <Feather name="edit-3" size={20} color="#fff" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.modalTitle}>{getModalHeader().title}</Text>
+                                <Text style={styles.modalSubtitle}>{getModalHeader().subtitle} • Step {currentStep + 1} of 7</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setIsFormModalVisible(false)}>
+                                <Feather name="x" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </LinearGradient>
+
+                        <ScrollView 
+                            style={styles.modalBody} 
+                            contentContainerStyle={{ flexGrow: 1 }}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {renderStepContent()}
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity 
+                                style={styles.btnCancel} 
+                                onPress={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : setIsFormModalVisible(false)}
+                            >
+                                <Text style={styles.btnCancelText}>{currentStep === 0 ? 'Cancel' : 'Back'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.btnSaveNext} onPress={handleNextStep}>
+                                <Text style={styles.btnSaveNextText}>{currentStep === 6 ? 'Finish & Submit' : 'Save & Next'}</Text>
+                                <Feather name="arrow-right" size={16} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* SELECTION MODAL */}
+            <Modal
+                visible={isSelectionModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setIsSelectionModalVisible(false)}
+            >
+                <TouchableOpacity 
+                    style={styles.selectionOverlay} 
+                    activeOpacity={1} 
+                    onPress={() => setIsSelectionModalVisible(false)}
+                >
+                    <View style={styles.selectionContent}>
+                        <View style={styles.selectionHeader}>
+                            <Text style={styles.selectionTitle}>{selectionTitle}</Text>
+                            <TouchableOpacity onPress={() => setIsSelectionModalVisible(false)}>
+                                <Feather name="x" size={20} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView style={styles.selectionScroll}>
+                            {selectionData.map((item, idx) => (
+                                <TouchableOpacity 
+                                    key={idx} 
+                                    style={styles.selectionItem}
+                                    onPress={() => {
+                                        updateFormData(selectionKey, item.Id);
+                                        setIsSelectionModalVisible(false);
+                                    }}
+                                >
+                                    <Text style={[styles.selectionText, (formData as any)[selectionKey] === item.Id && styles.selectionTextSelected]}>
+                                        {item.Name}
+                                    </Text>
+                                    {(formData as any)[selectionKey] === item.Id && <Feather name="check" size={16} color="#c1272d" />}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            {/* FILE SOURCE MODAL */}
+            <Modal
+                visible={isFileSourceVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setIsFileSourceVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.selectionContentWide}>
+                        <View style={styles.selectionHeader}>
+                            <Text style={styles.selectionTitle}>Select Resource</Text>
+                            <TouchableOpacity onPress={() => setIsFileSourceVisible(false)}>
+                                <Feather name="x" size={20} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.sourceGrid}>
+                            <TouchableOpacity style={styles.sourceItem} onPress={() => { setIsFileSourceVisible(false); handleTakePhoto(onFileSourceSelected); }}>
+                                <View style={[styles.sourceIconBox, { backgroundColor: '#fee2e2' }]}>
+                                    <Feather name="camera" size={24} color="#dc2626" />
+                                </View>
+                                <Text style={styles.sourceText}>Camera</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.sourceItem} onPress={() => { setIsFileSourceVisible(false); handlePickFromGallery(onFileSourceSelected); }}>
+                                <View style={[styles.sourceIconBox, { backgroundColor: '#dcfce7' }]}>
+                                    <Feather name="image" size={24} color="#16a34a" />
+                                </View>
+                                <Text style={styles.sourceText}>Gallery</Text>
+                            </TouchableOpacity>
+                            {allowSourceDocuments && (
+                                <TouchableOpacity style={styles.sourceItem} onPress={() => { setIsFileSourceVisible(false); /* Document picker logic */ }}>
+                                    <View style={[styles.sourceIconBox, { backgroundColor: '#dbeafe' }]}>
+                                        <Feather name="file" size={24} color="#2563eb" />
+                                    </View>
+                                    <Text style={styles.sourceText}>Document</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+
+            {/* RAW MATERIAL MODAL */}
+            <Modal
+                visible={isRmModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setIsRmModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <LinearGradient colors={['#ea580c', '#c2410c']} style={styles.modalHeader}>
+                            <View style={styles.modalHeaderIcon}>
+                                <Feather name="package" size={20} color="#fff" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.modalTitle}>Material Verification</Text>
+                                <Text style={styles.modalSubtitle}>Raw Material Photos</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setIsRmModalVisible(false)}>
+                                <Feather name="x" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </LinearGradient>
+
+                        <ScrollView 
+                            style={styles.modalBody} 
+                            contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {selectedInstRM && (
+                                <View style={styles.modalBodyPadding}>
+                                    {/* Asset Info Summary */}
+                                    <View style={[styles.sectionDivider, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
+                                        <View style={[styles.sectionBadge, { backgroundColor: '#ffedd5' }]}>
+                                            <MaterialCommunityIcons name="information" size={14} color="#ea580c" />
+                                        </View>
+                                        <Text style={[styles.sectionLabel, { color: '#ea580c' }]}>Asset Verification Context</Text>
+                                    </View>
+
+                                    <View style={styles.formGrid}>
+                                        <View style={{ width: '100%', marginBottom: 16 }}>
+                                            <Text style={styles.formFieldLabel}>Work Order / Project</Text>
+                                            <View style={styles.fieldValueBox}>
+                                                <Text style={styles.fieldValueText}>{workOrder?.WONumber} • {workOrder?.ProjectName}</Text>
+                                            </View>
+                                        </View>
+                                        
+                                        <View style={{ width: '100%', marginBottom: 16 }}>
+                                            <Text style={styles.formFieldLabel}>Asset Name</Text>
+                                            <View style={styles.fieldValueBox}>
+                                                <Text style={styles.fieldValueText}>{selectedInstRM.asset?.AssetName}</Text>
+                                            </View>
+                                        </View>
+
+                                        <View style={styles.formFieldRow}>
+                                            <Text style={styles.formFieldLabel}>Asset Type</Text>
+                                            <View style={styles.fieldValueBox}>
+                                                <Text style={styles.fieldValueText}>{selectedInstRM.asset?.AssetType?.[0]?.Name || 'N/A'}</Text>
+                                            </View>
+                                        </View>
+
+                                        <View style={styles.formFieldRow}>
+                                            <Text style={styles.formFieldLabel}>Asset Sub Type</Text>
+                                            <View style={styles.fieldValueBox}>
+                                                <Text style={styles.fieldValueText}>{selectedInstRM.asset?.AssetType?.[0]?.AssetSubType?.[0]?.Name || 'N/A'}</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+
+                                    {/* Photo Gallery */}
+                                    <View style={[styles.sectionDivider, { marginTop: 8 }]}>
+                                        <View style={styles.sectionBadge}><Feather name="image" size={12} color="#3b82f6" /></View>
+                                        <Text style={styles.sectionLabel}>Uploaded Photos ({rmPhotos.length})</Text>
+                                    </View>
+
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
+                                        {rmPhotos.map((photo, pIdx) => (
+                                            <View key={`rm-p-${pIdx}`} style={{ position: 'relative' }}>
+                                                <Image 
+                                                    source={{ uri: photo.uri }} 
+                                                    style={{ width: (width - 80) / 3, height: (width - 80) / 3, borderRadius: 8, backgroundColor: '#f3f4f6' }} 
+                                                />
+                                                {!photo.isExisting && (
+                                                    <TouchableOpacity 
+                                                        style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#dc2626', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' }}
+                                                        onPress={() => handleRemoveRMPhoto(pIdx)}
+                                                    >
+                                                        <Feather name="x" size={12} color="#fff" />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
+                                        ))}
+                                        
+                                        <TouchableOpacity 
+                                            style={[styles.photoUploadBox, { width: (width - 80) / 3, height: (width - 80) / 3, marginTop: 0 }]}
+                                            onPress={() => handleAddFileChoice(handleAddRMPhoto)}
+                                        >
+                                            <Feather name="plus" size={24} color="#9ca3af" />
+                                            <Text style={{ fontSize: 9, color: '#9ca3af', marginTop: 4 }}>Add Photo</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            )}
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity 
+                                style={styles.btnCancel} 
+                                onPress={() => setIsRmModalVisible(false)}
+                            >
+                                <Text style={styles.btnCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.btnSaveNext, { backgroundColor: '#ea580c' }]} 
+                                onPress={handleSaveRM}
+                                disabled={isSavingRM}
+                            >
+                                {isSavingRM ? <ActivityIndicator size="small" color="#fff" /> : (
+                                    <>
+                                        <Text style={styles.btnSaveNextText}>Save Verification</Text>
+                                        <Feather name="check" size={16} color="#fff" />
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
         </View>
     );
 };
@@ -1219,14 +1893,14 @@ const styles = StyleSheet.create({
 
     // Form Field Styles
     formGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 },
-    formFieldRow: { width: isMobile ? '100%' : '50%', paddingHorizontal: 8, marginBottom: 16 },
-    formFieldLabel: { fontSize: 12, fontWeight: '500', color: '#4b5563', marginBottom: 8 },
+    formFieldRow: { width: isMobile ? '100%' : '50%', paddingHorizontal: 8, marginBottom: 12 },
+    formFieldLabel: { fontSize: 11, fontWeight: '500', color: '#4b5563', marginBottom: 6 },
     inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 12 },
-    inputIcon: { marginRight: 10 },
-    input: { flex: 1, paddingVertical: 10, fontSize: 14, color: '#111827' },
-    dropdownTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 10 },
-    dropdownValue: { fontSize: 14, color: '#111827' },
-    sectionDivider: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 20, gap: 12, borderWidth: 1, borderColor: '#f1f5f9' },
+    inputIcon: { marginRight: 8 },
+    input: { flex: 1, paddingVertical: 8, fontSize: 13, color: '#111827' },
+    dropdownTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8 },
+    dropdownValue: { fontSize: 13, color: '#111827' },
+    sectionDivider: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 10, borderRadius: 8, marginBottom: 12, gap: 10, borderWidth: 1, borderColor: '#f1f5f9' },
     sectionBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center' },
     sectionBadgeText: { fontSize: 12, fontWeight: 'bold', color: '#3b82f6' },
     sectionLabel: { fontSize: 14, fontWeight: 'bold', color: '#3b82f6' },
@@ -1236,7 +1910,7 @@ const styles = StyleSheet.create({
     btnUploadBG: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#f97316' },
     btnUploadBGText: { fontSize: 12, color: '#f97316', fontWeight: 'bold' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-    modalContent: { width: isMobile ? '95%' : '80%', maxHeight: '90%', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 5 },
+    modalContent: { width: isMobile ? '95%' : 600, minHeight: 500, maxHeight: '95%', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 5 },
     modalHeaderIcon: { width: 40, height: 40, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
     modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
     modalSubtitle: { fontSize: 12, color: '#fff', opacity: 0.8 },
@@ -1266,7 +1940,7 @@ const styles = StyleSheet.create({
     fieldLabel: { fontSize: 12, fontWeight: 'bold', color: '#6b7280', marginLeft: 6 },
     fieldValueBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 12 },
     fieldIconBox: { width: 32, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    fieldValueText: { fontSize: 14, fontWeight: '600', color: '#111827', flex: 1 },
+    fieldValueText: { fontSize: 13, fontWeight: '600', color: '#111827', flex: 1 },
     imageModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
     imageModalClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 10 },
     imageSlide: { width, height: '100%', justifyContent: 'center', alignItems: 'center' },
@@ -1275,6 +1949,7 @@ const styles = StyleSheet.create({
     btnReject: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#dc2626', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4 },
     btnViewPhotos: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#3b82f6', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4, marginTop: 8 },
     btnActionText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+    modalBodyPadding: { padding: 16 },
 });
 
 export default WorkOrderDetailsScreen;

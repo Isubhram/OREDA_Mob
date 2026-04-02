@@ -14,8 +14,12 @@ export interface WorkOrderListResponse {
 }
 
 class WorkOrderService {
-    async getWorkOrders(page: number = 1, pageSize: number = 25): Promise<WorkOrderListResponse> {
-        return apiClient.get<WorkOrderListResponse>(`/workorders?pageNumber=${page}&pageSize=${pageSize}`) as unknown as Promise<WorkOrderListResponse>;
+    async getWorkOrders(page: number = 1, pageSize: number = 25, districtId?: number): Promise<WorkOrderListResponse> {
+        let url = `/workorders?pageNumber=${page}&pageSize=${pageSize}`;
+        if (districtId) {
+            url += `&DistrictId=${districtId}`;
+        }
+        return apiClient.get<WorkOrderListResponse>(url) as unknown as Promise<WorkOrderListResponse>;
     }
 
     async getWorkOrderById(id: number): Promise<ApiResponse<WorkOrder>> {

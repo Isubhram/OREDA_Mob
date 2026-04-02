@@ -7,11 +7,15 @@ import {
     StyleSheet,
     ScrollView,
     Image,
+    ImageBackground,
     SafeAreaView,
     KeyboardAvoidingView,
     Platform,
     Alert,
+    Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+const { width, height } = Dimensions.get('window');
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -50,7 +54,7 @@ const LoginScreen = () => {
     const generateCaptcha = () => {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 5; i++) {
             result += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         // Add spaces for better readability/visual separation like the mock
@@ -190,387 +194,423 @@ const LoginScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardView}
+        <ImageBackground
+            source={require('../../assets/login_bg_vertical.png')}
+            style={styles.container}
+            resizeMode="cover"
+        >
+            <LinearGradient
+                colors={['rgba(10, 20, 40, 0.4)', 'rgba(10, 20, 40, 0.7)', 'rgba(10, 20, 40, 0.9)']}
+                style={styles.gradientOverlay}
             >
-                <ScrollView contentContainerStyle={styles.scrollContent}>
+                <SafeAreaView style={{ flex: 1 }}>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={styles.keyboardView}
+                    >
+                        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                    {/* Header Section */}
-                    <View style={styles.header}>
-                        <Image
-                            source={require('../../assets/BrandLogo-BLzkWXZF.png')}
-                            style={styles.logoImage}
-                            resizeMode="contain"
-                        />
-                    </View>
+                            <View style={styles.glassCard}>
+                                {/* Logo inside card */}
+                                <View style={styles.cardLogoSection}>
+                                    <View style={styles.logoBackground}>
+                                        <Image
+                                            source={require('../../assets/BrandLogo-BLzkWXZF.png')}
+                                            style={styles.cardLogo}
+                                            resizeMode="contain"
+                                        />
+                                    </View>
+                                </View>
+                                {/* Welcome Text */}
+                                <View style={styles.welcomeSection}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                        <Text style={styles.welcomeTitle}>Welcome Back</Text>
+                                        <View style={styles.titleLine} />
+                                    </View>
+                                    <Text style={styles.welcomeSub}>OREDA Asset Management System</Text>
+                                    <Text style={styles.instructionText}>
+                                        Sign in to your account to continue
+                                    </Text>
+                                </View>
 
-                    {/* Welcome Text */}
-                    <View style={styles.welcomeSection}>
-                        <Text style={styles.welcomeTitle}>Welcome,</Text>
-                        <Text style={styles.welcomeSub}>Let's get started!</Text>
-                        <Text style={styles.instructionText}>
-                            Please use your credentials to login.
-                        </Text>
-                    </View>
-
-                    {/* Login Type Toggle */}
-                    <View style={styles.toggleContainer}>
-                        <TouchableOpacity
-                            style={[styles.toggleButton, loginType === 'phone' && styles.activeToggle]}
-                            onPress={() => setLoginType('phone')}
-                        >
-                            <Text style={[styles.toggleText, loginType === 'phone' && styles.activeToggleText]}>Phone Login</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.toggleButton, loginType === 'userId' && styles.activeToggle]}
-                            onPress={() => setLoginType('userId')}
-                        >
-                            <Text style={[styles.toggleText, loginType === 'userId' && styles.activeToggleText]}>UserId Login</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Form Fields */}
-                    <View style={styles.formContainer}>
-                        <TextInput
-                            style={[styles.input, errors.userId ? styles.inputError : null]}
-                            placeholder={loginType === 'phone' ? "Enter Your Phone Number" : "Enter Your User ID"}
-                            value={userId}
-                            onChangeText={(text) => {
-                                setUserId(text);
-                                clearError('userId');
-                            }}
-                            placeholderTextColor="#999"
-                            keyboardType={loginType === 'phone' ? 'phone-pad' : 'default'}
-                            editable={!isOtpSent}
-                        />
-                        {errors.userId ? <Text style={styles.errorText}>{errors.userId}</Text> : null}
-
-                        {loginType === 'userId' ? (
-                            <>
-                                <View style={[styles.passwordContainer, errors.password ? styles.inputError : null]}>
-                                    <TextInput
-                                        style={styles.passwordInput}
-                                        placeholder="Password"
-                                        value={password}
-                                        onChangeText={(text) => {
-                                            setPassword(text);
-                                            clearError('password');
-                                        }}
-                                        secureTextEntry={!isPasswordVisible}
-                                        placeholderTextColor="#999"
-                                    />
-                                    <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
-                                        <Ionicons name={isPasswordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />
+                                {/* Login Type Toggle */}
+                                <View style={styles.toggleContainer}>
+                                    <TouchableOpacity
+                                        style={[styles.toggleButton, loginType === 'phone' && styles.activeToggle]}
+                                        onPress={() => setLoginType('phone')}
+                                    >
+                                        <Text style={[styles.toggleText, loginType === 'phone' && styles.activeToggleText]}>Phone Login</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.toggleButton, loginType === 'userId' && styles.activeToggle]}
+                                        onPress={() => setLoginType('userId')}
+                                    >
+                                        <Text style={[styles.toggleText, loginType === 'userId' && styles.activeToggleText]}>UserId Login</Text>
                                     </TouchableOpacity>
                                 </View>
-                                {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
-                            </>
-                        ) : (
-                            isOtpSent && (
-                                <>
+
+                                {/* Form Fields */}
+                                <View style={styles.formContainer}>
                                     <TextInput
-                                        style={[styles.input, errors.otp ? styles.inputError : null]}
-                                        placeholder="Enter OTP"
-                                        value={otp}
+                                        style={[styles.input, errors.userId ? styles.inputError : null]}
+                                        placeholder={loginType === 'phone' ? "Enter Your Phone Number" : "Enter Your User ID"}
+                                        value={userId}
                                         onChangeText={(text) => {
-                                            setOtp(text);
-                                            clearError('otp');
+                                            setUserId(text);
+                                            clearError('userId');
                                         }}
                                         placeholderTextColor="#999"
-                                        keyboardType="number-pad"
-                                        maxLength={6}
+                                        keyboardType={loginType === 'phone' ? 'phone-pad' : 'default'}
+                                        editable={!isOtpSent}
                                     />
-                                    {errors.otp ? <Text style={styles.errorText}>{errors.otp}</Text> : null}
-                                </>
-                            )
-                        )}
+                                    {errors.userId ? <Text style={styles.errorText}>{errors.userId}</Text> : null}
 
-                        {/* Captcha Section */}
-                        {loginType === 'userId' && (
-                            <>
-                                <View style={styles.captchaRow}>
-                                    <Text style={styles.captchaDisplay}>{captchaCode}</Text>
+                                    {loginType === 'userId' ? (
+                                        <>
+                                            <View style={[styles.passwordContainer, errors.password ? styles.inputError : null]}>
+                                                <TextInput
+                                                    style={styles.passwordInput}
+                                                    placeholder="Password"
+                                                    value={password}
+                                                    onChangeText={(text) => {
+                                                        setPassword(text);
+                                                        clearError('password');
+                                                    }}
+                                                    secureTextEntry={!isPasswordVisible}
+                                                    placeholderTextColor="#999"
+                                                />
+                                                <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
+                                                    <Ionicons name={isPasswordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />
+                                                </TouchableOpacity>
+                                            </View>
+                                            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+                                        </>
+                                    ) : (
+                                        isOtpSent && (
+                                            <>
+                                                <TextInput
+                                                    style={[styles.input, errors.otp ? styles.inputError : null]}
+                                                    placeholder="Enter OTP"
+                                                    value={otp}
+                                                    onChangeText={(text) => {
+                                                        setOtp(text);
+                                                        clearError('otp');
+                                                    }}
+                                                    placeholderTextColor="#999"
+                                                    keyboardType="number-pad"
+                                                    maxLength={6}
+                                                />
+                                                {errors.otp ? <Text style={styles.errorText}>{errors.otp}</Text> : null}
+                                            </>
+                                        )
+                                    )}
+
+                                    {/* Captcha Section */}
+                                    {loginType === 'userId' && (
+                                        <View style={styles.captchaCompactRow}>
+                                            <View style={styles.captchaDisplayContainer}>
+                                                <Text style={styles.captchaDisplay}>{captchaCode}</Text>
+                                                <TouchableOpacity onPress={handleRefreshCaptcha} style={styles.refreshIconCompact}>
+                                                    <Ionicons name="refresh" size={18} color="#d32f2f" />
+                                                </TouchableOpacity>
+                                            </View>
+                                            <View style={[styles.captchaInputContainerCompact, errors.captcha ? styles.inputError : null]}>
+                                                <TextInput
+                                                    style={styles.captchaInputCompact}
+                                                    placeholder="Captcha"
+                                                    value={captcha}
+                                                    onChangeText={(text) => {
+                                                        setCaptcha(text);
+                                                        clearError('captcha');
+                                                    }}
+                                                    placeholderTextColor="#999"
+                                                />
+                                            </View>
+                                        </View>
+                                    )}
+                                    {errors.captcha ? <Text style={styles.errorText}>{errors.captcha}</Text> : null}
+
+                                    {/* Success / General Error Message */}
+                                    {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
+                                    {errors.general ? <Text style={[styles.errorText, { textAlign: 'center', marginBottom: 10 }]}>{errors.general}</Text> : null}
+
+                                    {/* Login / Get OTP Button */}
+                                    {isLoading ? (
+                                        <View style={styles.skeletonButtonContainer}>
+                                            <SkeletonLoader variant="rectangle" height={50} borderRadius={6} />
+                                        </View>
+                                    ) : (
+                                        <TouchableOpacity
+                                            style={styles.loginButton}
+                                            onPress={loginType === 'phone' && !isOtpSent ? handleGetOtp : handleLogin}
+                                        >
+                                            <Text style={styles.loginButtonText}>
+                                                {loginType === 'phone' && !isOtpSent ? 'Get OTP' : 'Login'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                    {/* Footer Links */}
+                                    <View style={styles.footerLinks}>
+                                        {/* <TouchableOpacity>
+                                            <Text style={styles.linkText}>Asset Installation Request</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity>
+                                            <Text style={styles.linkText}>Forgot Password?</Text>
+                                        </TouchableOpacity> */}
+                                    </View>
                                 </View>
-
-                                <View style={[styles.captchaInputContainer, errors.captcha ? styles.inputError : null]}>
-                                    <TextInput
-                                        style={styles.captchaInput}
-                                        placeholder="Enter Captcha Value"
-                                        value={captcha}
-                                        onChangeText={(text) => {
-                                            setCaptcha(text);
-                                            clearError('captcha');
-                                        }}
-                                        placeholderTextColor="#999"
-                                    />
-                                    <TouchableOpacity onPress={handleRefreshCaptcha} style={styles.refreshIcon}>
-                                        <Ionicons name="refresh" size={20} color="#666" />
-                                    </TouchableOpacity>
-                                </View>
-                                {errors.captcha ? <Text style={[styles.errorText, { marginTop: -15, marginBottom: 15 }]}>{errors.captcha}</Text> : null}
-                            </>
-                        )}
-
-                        {/* Success / General Error Message */}
-                        {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
-                        {errors.general ? <Text style={[styles.errorText, { textAlign: 'center', marginBottom: 10 }]}>{errors.general}</Text> : null}
-
-                        {/* Login / Get OTP Button */}
-                        {isLoading ? (
-                            <View style={styles.skeletonButtonContainer}>
-                                <SkeletonLoader variant="rectangle" height={50} borderRadius={6} />
                             </View>
-                        ) : (
-                            <TouchableOpacity
-                                style={styles.loginButton}
-                                onPress={loginType === 'phone' && !isOtpSent ? handleGetOtp : handleLogin}
-                            >
-                                <Text style={styles.loginButtonText}>
-                                    {loginType === 'phone' && !isOtpSent ? 'Get OTP' : 'Login'}
-                                </Text>
-                            </TouchableOpacity>
-                        )}
-
-                        {loginType === 'phone' && isOtpSent && (
-                            <TouchableOpacity onPress={() => { setIsOtpSent(false); setSuccessMessage(''); }} style={styles.resendContainer}>
-                                <Text style={styles.resendText}>Change Phone Number?</Text>
-                            </TouchableOpacity>
-                        )}
-
-                        {/* Footer Links */}
-                        <View style={styles.footerLinks}>
-                            <TouchableOpacity>
-                                <Text style={styles.linkText}>Asset Installation Request</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity>
-                                <Text style={styles.linkText}>Forgot Password?</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+                </SafeAreaView>
+            </LinearGradient>
+        </ImageBackground>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#0a1428', // Match the deep blue of the sunset background
+    },
+    gradientOverlay: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
     },
     keyboardView: {
         flex: 1,
     },
     scrollContent: {
         flexGrow: 1,
-        padding: 20,
+        padding: 24,
         justifyContent: 'center',
     },
-    header: {
+    logoBackground: {
         alignItems: 'center',
-        marginBottom: 30,
-    },
-    logoImage: {
+        justifyContent: 'center',
         width: '100%',
-        height: 100, // Adjust height as needed
+        marginBottom: 20,
     },
-    logoPlaceholder: {
-        width: 60,
-        height: 60,
-        justifyContent: 'center',
+    cardLogoSection: {
         alignItems: 'center',
-        marginRight: 15,
+        marginBottom: 10,
     },
-    headerTextContainer: {
-        flex: 1,
+    cardLogo: {
+        width: 140,
+        height: 40,
     },
-    companyName: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#3f2b96', // Approximate purple/blue color
-    },
-    subCompanyName: {
-        fontSize: 12,
-        color: '#333',
+    glassCard: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: 24,
+        padding: 20,
+        width: '90%',
+        alignSelf: 'center',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
     },
     welcomeSection: {
-        marginBottom: 25,
+        marginBottom: 20,
+        alignItems: 'center',
     },
     welcomeTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
-        color: '#000',
+        color: '#1e293b',
+        letterSpacing: -0.5,
+        marginBottom: 2,
+    },
+    titleLine: {
+        display: 'none',
     },
     welcomeSub: {
-        fontSize: 16,
-        color: '#333',
-        marginBottom: 10,
+        fontSize: 14,
+        color: '#64748b',
+        fontWeight: '600',
+        marginBottom: 4,
+        textAlign: 'center',
     },
     instructionText: {
         fontSize: 12,
-        color: '#666',
+        color: '#94a3b8',
         lineHeight: 18,
+        textAlign: 'center',
     },
     toggleContainer: {
         flexDirection: 'row',
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
+        backgroundColor: '#f1f5f9',
+        borderRadius: 12,
         padding: 4,
         marginBottom: 20,
     },
     toggleButton: {
         flex: 1,
-        paddingVertical: 10,
+        paddingVertical: 12,
         alignItems: 'center',
-        borderRadius: 6,
+        borderRadius: 8,
     },
     activeToggle: {
         backgroundColor: '#fff',
-        elevation: 2,
+        elevation: 4,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowRadius: 3,
     },
     toggleText: {
-        color: '#666',
-        fontWeight: '500',
+        color: '#64748b',
+        fontWeight: '600',
+        fontSize: 14,
     },
     activeToggleText: {
-        color: '#333',
+        color: '#1e293b',
         fontWeight: 'bold',
     },
     formContainer: {
         width: '100%',
     },
     input: {
+        backgroundColor: '#f8fafc',
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 6,
-        paddingHorizontal: 15,
+        borderColor: '#f1f5f9',
+        borderRadius: 12,
+        paddingHorizontal: 16,
         paddingVertical: 12,
         marginBottom: 15,
-        fontSize: 16,
-        color: '#000',
+        fontSize: 15,
+        color: '#1e293b',
     },
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: '#f8fafc',
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 6,
+        borderColor: '#f1f5f9',
+        borderRadius: 12,
         marginBottom: 15,
     },
     passwordInput: {
         flex: 1,
-        paddingHorizontal: 15,
-        paddingVertical: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
         fontSize: 16,
-        color: '#000',
+        color: '#1e293b',
     },
     eyeIcon: {
-        padding: 10,
+        padding: 12,
     },
-    captchaRow: {
+    captchaCompactRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 16,
+        gap: 10,
+    },
+    captchaDisplayContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f1f5f9',
+        borderRadius: 12,
+        height: 45,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        paddingHorizontal: 8,
     },
     captchaDisplay: {
         fontSize: 18,
         fontStyle: 'italic',
-        color: 'red',
-        letterSpacing: 4,
+        color: '#d32f2f',
+        letterSpacing: 3,
         fontWeight: 'bold',
+        marginRight: 6,
     },
-    captchaInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    refreshIconCompact: {
+        padding: 4,
+    },
+    captchaInputContainerCompact: {
+        flex: 1.2,
+        backgroundColor: '#f8fafc',
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 6,
-        marginBottom: 20,
+        borderColor: '#f1f5f9',
+        borderRadius: 12,
+        height: 45,
     },
-    captchaInput: {
+    captchaInputCompact: {
         flex: 1,
-        paddingHorizontal: 15,
-        paddingVertical: 12,
-        fontSize: 16,
-        color: '#000',
+        paddingHorizontal: 16,
+        fontSize: 14,
+        color: '#1e293b',
     },
     refreshIcon: {
-        padding: 10,
+        padding: 12,
     },
     loginButton: {
-        backgroundColor: '#d32f2f', // Red color matching image
-        paddingVertical: 15,
-        borderRadius: 6,
+        backgroundColor: '#d32f2f',
+        paddingVertical: 14,
+        borderRadius: 12,
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 15,
         height: 50,
         justifyContent: 'center',
+        elevation: 4,
+        shadowColor: '#d32f2f',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+    },
+    loginButtonText: {
+        color: '#fff',
+        fontWeight: '900',
+        fontSize: 18,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
     },
     resendContainer: {
         alignItems: 'center',
         marginBottom: 20,
     },
     resendText: {
-        color: '#3f2b96',
+        color: '#d32f2f',
         fontSize: 14,
-        fontWeight: '500',
-    },
-    disabledButton: {
-        backgroundColor: '#e57373',
-    },
-    loginButtonText: {
-        color: '#fff',
         fontWeight: 'bold',
-        fontSize: 16,
     },
     footerLinks: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginTop: 8,
     },
     linkText: {
-        color: '#666',
-        fontSize: 12,
-        textDecorationLine: 'underline',
+        color: '#64748b',
+        fontSize: 14,
+        fontWeight: '600',
     },
     errorText: {
-        color: '#d32f2f',
+        color: '#ef4444',
         fontSize: 12,
-        marginTop: -10,
-        marginBottom: 10,
-        marginLeft: 5,
+        marginTop: -12,
+        marginBottom: 12,
+        marginLeft: 4,
+        fontWeight: '600',
     },
     successText: {
-        color: '#2e7d32',
+        color: '#10b981',
         fontSize: 14,
         textAlign: 'center',
-        marginBottom: 10,
-        fontWeight: '500',
+        marginBottom: 12,
+        fontWeight: 'bold',
     },
     inputError: {
-        borderColor: '#d32f2f',
+        borderColor: '#ef4444',
+        backgroundColor: '#fef2f2',
     },
     skeletonButtonContainer: {
-        marginBottom: 10,
-    },
-    testButton: {
-        backgroundColor: '#f0f0f0',
-        paddingVertical: 12,
-        borderRadius: 6,
-        alignItems: 'center',
-        marginTop: 15,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderStyle: 'dashed',
-    },
-    testButtonText: {
-        color: '#666',
-        fontSize: 14,
-        fontWeight: '500',
+        marginBottom: 12,
     },
 });
 
