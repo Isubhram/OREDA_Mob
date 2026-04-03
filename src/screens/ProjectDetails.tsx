@@ -40,13 +40,10 @@ const ProjectDetailsScreen = ({ route, navigation }: any) => {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+			<StatusBar barStyle='light-content' translucent backgroundColor='transparent' />
 			<ScrollView style={styles.mainScrollView} showsVerticalScrollIndicator={false}>
 				{/* Premium Header with Gradient */}
-				<LinearGradient
-					colors={['#8b1a1a', '#c52525', '#e23f3f']}
-					style={styles.headerGradient}
-				>
+				<LinearGradient colors={['#8b1a1a', '#c52525', '#e23f3f']} style={styles.headerGradient}>
 					<SafeAreaView edges={['top', 'left', 'right']}>
 						<View style={styles.headerContent}>
 							<TouchableOpacity
@@ -57,9 +54,16 @@ const ProjectDetailsScreen = ({ route, navigation }: any) => {
 								<Feather name='arrow-left' size={24} color='#fff' />
 							</TouchableOpacity>
 							<View style={styles.headerTitleContainer}>
-								<Text style={styles.headerTitle} numberOfLines={2}>{project?.Name || 'Project Details'}</Text>
+								<Text style={styles.headerTitle} numberOfLines={2}>
+									{project?.Name || 'Project Details'}
+								</Text>
 								<View style={styles.headerBadge}>
-									<MaterialCommunityIcons name='folder-outline' size={14} color='#fff' opacity={0.8} />
+									<MaterialCommunityIcons
+										name='folder-outline'
+										size={14}
+										color='#fff'
+										opacity={0.8}
+									/>
 									<Text style={styles.headerBadgeText}>
 										{project?.TypeOfFundingText || 'Solar Project'}
 									</Text>
@@ -132,8 +136,18 @@ const ProjectDetailsScreen = ({ route, navigation }: any) => {
 								</View>
 								<View style={styles.infoCell}>
 									<Text style={styles.infoLabel}>Status</Text>
-									<View style={[styles.statusTag, { backgroundColor: project?.IsActive !== false ? '#dcfce7' : '#fee2e2' }]}>
-										<Text style={[styles.statusTagText, { color: project?.IsActive !== false ? '#15803d' : '#b91c1c' }]}>
+									<View
+										style={[
+											styles.statusTag,
+											{ backgroundColor: project?.IsActive !== false ? '#dcfce7' : '#fee2e2' },
+										]}
+									>
+										<Text
+											style={[
+												styles.statusTagText,
+												{ color: project?.IsActive !== false ? '#15803d' : '#b91c1c' },
+											]}
+										>
 											{project?.IsActive !== false ? 'Active' : 'Inactive'}
 										</Text>
 									</View>
@@ -176,7 +190,9 @@ const ProjectDetailsScreen = ({ route, navigation }: any) => {
 							project?.SanctionOrders?.map((order, index) => (
 								<TouchableOpacity key={index} style={styles.orderCard} activeOpacity={0.7}>
 									<View style={styles.orderHeader}>
-										<Text style={styles.orderNumber}>{order.SanctionOrderNumber || `Order #${index + 1}`}</Text>
+										<Text style={styles.orderNumber}>
+											{order.SanctionOrderNumber || `Order #${index + 1}`}
+										</Text>
 										<Text style={styles.orderDate}>{formatDate(order.SanctionDate)}</Text>
 									</View>
 									<Text style={styles.orderAmount}>{formatCurrency(order.SanctionAmount)}</Text>
@@ -250,6 +266,7 @@ const styles = StyleSheet.create({
 	statsRow: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
+		marginTop: 30,
 		marginBottom: 16,
 	},
 	statItem: {
