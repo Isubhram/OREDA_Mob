@@ -106,42 +106,40 @@ const IncidentDetailScreen = () => {
         <SafeAreaView style={styles.container} edges={['top']}>
             <StatusBar barStyle="light-content" />
             
-            {/* Header */}
-            <LinearGradient colors={['#1e293b', '#334155']} style={styles.header}>
-                <View style={styles.headerTop}>
+            {/* Compact Header */}
+            <LinearGradient colors={['#8b1a1a', '#c1272d']} style={styles.header}>
+                <View style={styles.headerRow}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                        <Ionicons name="arrow-back" size={20} color="#fff" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Incident Detail</Text>
-                    <View style={{ width: 40 }} />
-                </View>
-
-                <View style={styles.headerContent}>
-                    <View style={styles.ticketBadge}>
+                    <View style={styles.headerCenter}>
+                        <Text style={styles.headerLabel}>Incident</Text>
                         <Text style={styles.ticketNumber}>{ticket.TicketNumber}</Text>
-                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(ticket.Status) + '20', borderColor: getStatusColor(ticket.Status) }]}>
-                            <View style={[styles.statusDot, { backgroundColor: getStatusColor(ticket.Status) }]} />
-                            <Text style={[styles.statusText, { color: getStatusColor(ticket.Status) }]}>{ticket.Status.toUpperCase()}</Text>
-                        </View>
+                    </View>
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(ticket.Status) + '25', borderColor: getStatusColor(ticket.Status) }]}>
+                        <View style={[styles.statusDot, { backgroundColor: getStatusColor(ticket.Status) }]} />
+                        <Text style={[styles.statusText, { color: '#fff' }]}>{ticket.Status.toUpperCase()}</Text>
                     </View>
                 </View>
             </LinearGradient>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 
-                {/* Information Row */}
-                <View style={[styles.section, { marginTop: -30, elevation: 5 }]}>
-                    <View style={styles.infoRow}>
-                        <View style={styles.infoCol}>
-                            <Text style={styles.infoLabel}>CREATED ON</Text>
-                            <View style={styles.infoValueRow}>
-                                <Feather name="clock" size={14} color="#64748b" />
-                                <Text style={styles.infoValue}>{formatDate(ticket.CreatedOn)}</Text>
-                            </View>
+                {/* Quick Info Strip */}
+                <View style={styles.infoStrip}>
+                    <View style={styles.infoChip}>
+                        <Feather name="clock" size={12} color="#64748b" />
+                        <View>
+                            <Text style={styles.infoChipLabel}>Created</Text>
+                            <Text style={styles.infoChipValue}>{formatDate(ticket.CreatedOn)}</Text>
                         </View>
-                        <View style={styles.infoCol}>
-                            <Text style={styles.infoLabel}>REASON CATEGORY</Text>
-                            <Text style={styles.infoValue}>{ticket.ReasonCategory || 'General'}</Text>
+                    </View>
+                    <View style={styles.infoChipDivider} />
+                    <View style={styles.infoChip}>
+                        <Feather name="tag" size={12} color="#64748b" />
+                        <View>
+                            <Text style={styles.infoChipLabel}>Category</Text>
+                            <Text style={styles.infoChipValue}>{ticket.ReasonCategory || 'General'}</Text>
                         </View>
                     </View>
                 </View>
@@ -312,59 +310,84 @@ const IncidentDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
+    container: { flex: 1, backgroundColor: '#f1f5f9' },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    loadingText: { marginTop: 12, color: '#64748b', fontSize: 14 },
-    header: { paddingBottom: 60, paddingHorizontal: 20, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
-    headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
-    backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-    headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
-    headerContent: { alignItems: 'center', marginTop: 30 },
-    ticketBadge: { alignItems: 'center', gap: 10 },
-    ticketNumber: { fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: 1 },
-    statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, borderWidth: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
-    statusDot: { width: 8, height: 8, borderRadius: 4 },
-    statusText: { fontSize: 12, fontWeight: 'bold' },
-    content: { flex: 1, paddingHorizontal: 20 },
-    section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 20, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 3 },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 10 },
-    sectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#1e293b' },
-    infoRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    infoCol: { flex: 1 },
-    infoLabel: { fontSize: 10, fontWeight: 'bold', color: '#94a3b8', marginBottom: 4 },
-    infoValueRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    infoValue: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
-    ticketSubject: { fontSize: 16, fontWeight: 'bold', color: '#1e293b', marginBottom: 8 },
-    ticketDescription: { fontSize: 14, color: '#475569', lineHeight: 20 },
+    loadingText: { marginTop: 8, color: '#64748b', fontSize: 12 },
+
+    // Compact header
+    header: {
+        paddingHorizontal: 14, paddingTop: 8, paddingBottom: 14,
+        borderBottomLeftRadius: 20, borderBottomRightRadius: 20,
+    },
+    headerRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+    },
+    backBtn: {
+        width: 32, height: 32, borderRadius: 16,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center', alignItems: 'center',
+    },
+    headerCenter: { flex: 1 },
+    headerLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+    ticketNumber: { fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+    statusBadge: {
+        flexDirection: 'row', alignItems: 'center', gap: 5,
+        paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1,
+    },
+    statusDot: { width: 7, height: 7, borderRadius: 4 },
+    statusText: { fontSize: 10, fontWeight: '800' },
+
+    // Info strip
+    infoStrip: {
+        flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14,
+        padding: 10, marginBottom: 12, marginTop: 12,
+        elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 3, alignItems: 'center',
+    },
+    infoChip: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+    infoChipLabel: { fontSize: 9, color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' },
+    infoChipValue: { fontSize: 11, fontWeight: '700', color: '#1e293b' },
+    infoChipDivider: { width: 1, height: 24, backgroundColor: '#e2e8f0' },
+
+    content: { flex: 1, paddingHorizontal: 14 },
+    section: {
+        backgroundColor: '#fff', borderRadius: 14, padding: 12,
+        marginBottom: 10, elevation: 1, shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3,
+    },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 },
+    sectionTitle: { fontSize: 13, fontWeight: '800', color: '#1e293b' },
+    ticketSubject: { fontSize: 13, fontWeight: 'bold', color: '#1e293b', marginBottom: 4 },
+    ticketDescription: { fontSize: 12, color: '#475569', lineHeight: 18 },
     detailGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-    detailItem: { width: '100%', marginBottom: 12 },
-    detailLabel: { fontSize: 12, color: '#64748b', marginBottom: 2 },
-    detailValue: { fontSize: 14, fontWeight: '600', color: '#334155' },
-    beneficiaryBadge: { alignSelf: 'flex-start', backgroundColor: '#fff7ed', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: '#fdba74', marginTop: 4 },
+    detailItem: { width: '50%', marginBottom: 8 },
+    detailLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '600', marginBottom: 1 },
+    detailValue: { fontSize: 12, fontWeight: '600', color: '#334155' },
+    beneficiaryBadge: { alignSelf: 'flex-start', backgroundColor: '#fff7ed', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: '#fdba74', marginTop: 2 },
     beneficiaryBadgeText: { fontSize: 10, fontWeight: 'bold', color: '#ea580c' },
-    remarksBox: { backgroundColor: '#f0fdf4', padding: 12, borderRadius: 8, marginTop: 10 },
-    remarksLabel: { fontSize: 12, fontWeight: 'bold', color: '#166534', marginBottom: 4 },
-    remarksText: { fontSize: 13, color: '#166534' },
-    footer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', padding: 16, borderTopWidth: 1, borderTopColor: '#e2e8f0', elevation: 10 },
-    actionBtn: { height: 50, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    remarksBox: { backgroundColor: '#f0fdf4', padding: 8, borderRadius: 8, marginTop: 6 },
+    remarksLabel: { fontSize: 10, fontWeight: 'bold', color: '#166534', marginBottom: 2 },
+    remarksText: { fontSize: 11, color: '#166534' },
+    footer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', padding: 10, borderTopWidth: 1, borderTopColor: '#e2e8f0', elevation: 10 },
+    actionBtn: { height: 42, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
     resolveBtn: { backgroundColor: '#10b981' },
-    actionBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    actionBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
     finalisedFooter: { backgroundColor: '#f0fdf4', borderTopColor: '#bbf7d0' },
-    finalisedBadge: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', padding: 12, borderRadius: 12, flex: 1, borderWidth: 1, borderColor: '#10b981' },
-    finalisedTitle: { fontSize: 15, fontWeight: 'bold', color: '#1e293b' },
-    finalisedSubtitle: { fontSize: 12, color: '#64748b' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-    modalContent: { backgroundColor: '#fff', borderRadius: 20, width: '100%', overflow: 'hidden' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1e293b' },
-    modalBody: { padding: 20 },
-    inputLabel: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 10 },
-    textArea: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 15, height: 120, fontSize: 14, color: '#1e293b' },
-    modalFooter: { flexDirection: 'row', padding: 20, gap: 12 },
-    modalCancelBtn: { flex: 1, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f1f5f9' },
-    modalCancelText: { fontSize: 14, fontWeight: 'bold', color: '#64748b' },
-    modalSubmitBtn: { flex: 2, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: '#10b981' },
-    modalSubmitText: { fontSize: 14, fontWeight: 'bold', color: '#fff' }
+    finalisedBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', padding: 8, borderRadius: 12, flex: 1, borderWidth: 1, borderColor: '#10b981' },
+    finalisedTitle: { fontSize: 13, fontWeight: 'bold', color: '#1e293b' },
+    finalisedSubtitle: { fontSize: 10, color: '#64748b' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 14 },
+    modalContent: { backgroundColor: '#fff', borderRadius: 16, width: '100%', overflow: 'hidden' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    modalTitle: { fontSize: 15, fontWeight: 'bold', color: '#1e293b' },
+    modalBody: { padding: 14 },
+    inputLabel: { fontSize: 11, fontWeight: '600', color: '#64748b', marginBottom: 6 },
+    textArea: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 10, height: 100, fontSize: 12, color: '#1e293b' },
+    modalFooter: { flexDirection: 'row', padding: 14, gap: 8 },
+    modalCancelBtn: { flex: 1, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f1f5f9' },
+    modalCancelText: { fontSize: 12, fontWeight: 'bold', color: '#64748b' },
+    modalSubmitBtn: { flex: 2, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: '#10b981' },
+    modalSubmitText: { fontSize: 12, fontWeight: 'bold', color: '#fff' },
 });
 
 export default IncidentDetailScreen;

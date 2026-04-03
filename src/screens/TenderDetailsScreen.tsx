@@ -31,120 +31,120 @@ const InfoItem = ({ label, value, icon }: any) => (
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#eef1f5' },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    backLink: { marginTop: 10 },
-    scrollContent: { padding: isMobile ? 8 : 16, paddingBottom: 40 },
+    backLink: { marginTop: 7 },
+    scrollContent: { padding: isMobile ? 8 : 16, paddingBottom: 28 },
     headerGradient: {
-        paddingBottom: 24,
+        paddingBottom: 16,
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         marginHorizontal: -16,
         marginTop: -16,
-        marginBottom: 16,
+        marginBottom: 11,
     },
     headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: 14,
         paddingTop: isMobile ? 12 : 20,
     },
     backButton: {
-        width: 44,
-        height: 44,
+        width: 37,
+        height: 37,
         borderRadius: 22,
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 16,
+        marginRight: 11,
     },
     headerTitleContainer: {
         flex: 1,
     },
     headerTitle: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#fff',
-        marginBottom: 6,
+        marginBottom: 4,
     },
     headerBadge: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255, 255, 255, 0.15)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
+        paddingHorizontal: 7,
+        paddingVertical: 2,
         borderRadius: 12,
         alignSelf: 'flex-start',
     },
     headerBadgeText: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#fff',
-        marginLeft: 6,
+        marginLeft: 4,
         fontWeight: '500',
     },
     headerActionsContainer: {
-        paddingHorizontal: 16,
-        marginBottom: 16,
+        paddingHorizontal: 11,
+        marginBottom: 11,
     },
-    headerActions: { flexDirection: 'row', gap: 8, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end', marginTop: isMobile ? 8 : 0 },
-    btnOutlineOrange: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#f97316', backgroundColor: '#fff7ed', flex: isMobile ? 1 : 0, alignItems: 'center' },
-    btnOutlineTextOrange: { color: '#f97316', fontSize: 11, fontWeight: 'bold' },
-    btnSolidRed: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#dc2626', flex: isMobile ? 1 : 0, alignItems: 'center' },
-    btnSolidText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
-    statsContainer: { marginBottom: 16, gap: 12 },
-    statsRowWrapper: { flexDirection: 'row', gap: 12 },
-    statCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10, elevation: 2 },
-    statIconBoxRed: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center' },
-    statIconBoxOrange: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#ffedd5', justifyContent: 'center', alignItems: 'center' },
-    statIconBoxGreen: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#dcfce7', justifyContent: 'center', alignItems: 'center' },
-    statIconBoxBlue: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#dbeafe', justifyContent: 'center', alignItems: 'center' },
-    statLabel: { fontSize: 12, fontWeight: 'bold', color: '#374151' },
+    headerActions: { flexDirection: 'row', gap: 5, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end', marginTop: isMobile ? 8 : 0 },
+    btnOutlineOrange: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: '#f97316', backgroundColor: '#fff7ed', flex: isMobile ? 1 : 0, alignItems: 'center' },
+    btnOutlineTextOrange: { color: '#f97316', fontSize: 10, fontWeight: 'bold' },
+    btnSolidRed: { paddingHorizontal: 11, paddingVertical: 5, borderRadius: 20, backgroundColor: '#dc2626', flex: isMobile ? 1 : 0, alignItems: 'center' },
+    btnSolidText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+    statsContainer: { marginBottom: 11, gap: 8 },
+    statsRowWrapper: { flexDirection: 'row', gap: 8 },
+    statCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 8, flexDirection: 'row', alignItems: 'center', gap: 7, elevation: 2 },
+    statIconBoxRed: { width: 30, height: 30, borderRadius: 8, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center' },
+    statIconBoxOrange: { width: 30, height: 30, borderRadius: 8, backgroundColor: '#ffedd5', justifyContent: 'center', alignItems: 'center' },
+    statIconBoxGreen: { width: 30, height: 30, borderRadius: 8, backgroundColor: '#dcfce7', justifyContent: 'center', alignItems: 'center' },
+    statIconBoxBlue: { width: 30, height: 30, borderRadius: 8, backgroundColor: '#dbeafe', justifyContent: 'center', alignItems: 'center' },
+    statLabel: { fontSize: 10, fontWeight: 'bold', color: '#374151' },
     statSubLabel: { fontSize: 10, color: '#9ca3af' },
-    statValue: { fontSize: 18, fontWeight: 'bold', color: '#b91c1c', marginLeft: 'auto' },
+    statValue: { fontSize: 16, fontWeight: 'bold', color: '#b91c1c', marginLeft: 'auto' },
     statUnit: { fontSize: 10, color: '#9ca3af' },
-    contentGrid: { flexDirection: isMobile ? 'column' : 'row', gap: 16 },
-    mainColumn: { flex: 2, gap: 16 },
-    sidebarColumn: { flex: 1, gap: 16 },
-    sectionCard: { backgroundColor: '#fff', borderRadius: 12, padding: 16, elevation: 2 },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-    sectionIconBoxRed: { width: 28, height: 28, borderRadius: 6, backgroundColor: '#dc2626', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-    sectionIconBoxOrange: { width: 28, height: 28, borderRadius: 6, backgroundColor: '#f97316', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-    sectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#111827' },
-    sectionSubtitle: { fontSize: 11, color: '#6b7280', marginTop: 1 },
+    contentGrid: { flexDirection: isMobile ? 'column' : 'row', gap: 11 },
+    mainColumn: { flex: 2, gap: 11 },
+    sidebarColumn: { flex: 1, gap: 11 },
+    sectionCard: { backgroundColor: '#fff', borderRadius: 12, padding: 11, elevation: 2 },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 11 },
+    sectionIconBoxRed: { width: 23, height: 23, borderRadius: 6, backgroundColor: '#dc2626', justifyContent: 'center', alignItems: 'center', marginRight: 7 },
+    sectionIconBoxOrange: { width: 23, height: 23, borderRadius: 6, backgroundColor: '#f97316', justifyContent: 'center', alignItems: 'center', marginRight: 7 },
+    sectionTitle: { fontSize: 12, fontWeight: 'bold', color: '#111827' },
+    sectionSubtitle: { fontSize: 10, color: '#6b7280', marginTop: 1 },
     infoGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 },
-    infoItem: { width: isMobile ? '100%' : '50%', paddingHorizontal: 8, flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 },
-    infoIconWrapper: { width: 26, height: 26, backgroundColor: '#f3f4f6', borderRadius: 4, justifyContent: 'center', alignItems: 'center', marginRight: 10, marginTop: 2 },
-    hashIcon: { fontSize: 13, fontWeight: 'bold', color: '#6b7280' },
+    infoItem: { width: isMobile ? '100%' : '50%', paddingHorizontal: 5, flexDirection: 'row', alignItems: 'flex-start', marginBottom: 11 },
+    infoIconWrapper: { width: 22, height: 22, backgroundColor: '#f3f4f6', borderRadius: 4, justifyContent: 'center', alignItems: 'center', marginRight: 7, marginTop: 2 },
+    hashIcon: { fontSize: 11, fontWeight: 'bold', color: '#6b7280' },
     infoLabel: { fontSize: 10, color: '#6b7280', marginBottom: 1 },
-    infoValue: { fontSize: 12, color: '#111827', fontWeight: '500' },
-    documentItem: { flexDirection: 'row', alignItems: 'center', padding: 10, borderWidth: 1, borderColor: '#fee2e2', borderRadius: 10, marginBottom: 8, backgroundColor: '#fffcfc' },
-    docIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-    docName: { flex: 1, fontSize: 13, fontWeight: '500', color: '#1f2937' },
-    docActions: { flexDirection: 'row', gap: 8 },
-    docActionBtn: { flexDirection: 'row', alignItems: 'center', padding: 4 },
-    docDownloadBtn: { flexDirection: 'row', alignItems: 'center', padding: 6, borderWidth: 1, borderColor: '#bbf7d0', borderRadius: 6, backgroundColor: '#f0fdf4' },
-    docActionText: { fontSize: 11, fontWeight: '600' },
-    emptyPlaceholderCard: { flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', padding: 12, borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, backgroundColor: '#fef2f2', gap: 10 },
-    emptyPlaceholderIconBox: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: '#fecaca' },
-    placeholderTitle: { fontSize: 13, fontWeight: 'bold', color: '#374151' },
-    placeholderSubtitle: { fontSize: 11, color: '#9ca3af' },
-    btnSolidRedSm: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, backgroundColor: '#dc2626', alignSelf: isMobile ? 'flex-end' : 'auto' },
+    infoValue: { fontSize: 10, color: '#111827', fontWeight: '500' },
+    documentItem: { flexDirection: 'row', alignItems: 'center', padding: 7, borderWidth: 1, borderColor: '#fee2e2', borderRadius: 10, marginBottom: 5, backgroundColor: '#fffcfc' },
+    docIconBox: { width: 27, height: 27, borderRadius: 8, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center', marginRight: 7 },
+    docName: { flex: 1, fontSize: 11, fontWeight: '500', color: '#1f2937' },
+    docActions: { flexDirection: 'row', gap: 5 },
+    docActionBtn: { flexDirection: 'row', alignItems: 'center', padding: 2 },
+    docDownloadBtn: { flexDirection: 'row', alignItems: 'center', padding: 4, borderWidth: 1, borderColor: '#bbf7d0', borderRadius: 6, backgroundColor: '#f0fdf4' },
+    docActionText: { fontSize: 10, fontWeight: '600' },
+    emptyPlaceholderCard: { flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', padding: 8, borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, backgroundColor: '#fef2f2', gap: 7 },
+    emptyPlaceholderIconBox: { width: 30, height: 30, borderRadius: 8, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: '#fecaca' },
+    placeholderTitle: { fontSize: 11, fontWeight: 'bold', color: '#374151' },
+    placeholderSubtitle: { fontSize: 10, color: '#9ca3af' },
+    btnSolidRedSm: { paddingHorizontal: 7, paddingVertical: 4, borderRadius: 20, backgroundColor: '#dc2626', alignSelf: isMobile ? 'flex-end' : 'auto' },
     btnSolidTextSm: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-    vendorItem: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-    vendorAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center' },
-    vendorName: { fontSize: 12, fontWeight: 'bold', color: '#374151' },
+    vendorItem: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
+    vendorAvatar: { width: 23, height: 23, borderRadius: 14, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center' },
+    vendorName: { fontSize: 10, fontWeight: 'bold', color: '#374151' },
     vendorEmail: { fontSize: 10, color: '#6b7280' },
-    assetItem: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-    assetIconBox: { width: 28, height: 28, borderRadius: 6, backgroundColor: '#ffedd5', justifyContent: 'center', alignItems: 'center' },
-    assetName: { fontSize: 12, color: '#374151', fontWeight: '500' },
-    countBadge: { backgroundColor: '#f3f4f6', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10 },
+    assetItem: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 7 },
+    assetIconBox: { width: 23, height: 23, borderRadius: 6, backgroundColor: '#ffedd5', justifyContent: 'center', alignItems: 'center' },
+    assetName: { fontSize: 10, color: '#374151', fontWeight: '500' },
+    countBadge: { backgroundColor: '#f3f4f6', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 10 },
     countText: { fontSize: 10, color: '#6b7280', fontWeight: 'bold' },
-    emptyText: { textAlign: 'center', color: '#9ca3af', padding: 16, fontSize: 12 },
+    emptyText: { textAlign: 'center', color: '#9ca3af', padding: 11, fontSize: 10 },
 
     // New Work Order Card Styles
     woCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
+        padding: 11,
+        marginBottom: 11,
         borderWidth: 1,
         borderColor: '#f3f4f6',
         elevation: 1,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     woCardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 8,
     },
     woIndexBadge: {
         width: 24,
@@ -174,35 +174,35 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     woCardTitle: {
-        fontSize: 15,
+        fontSize: 13,
         fontWeight: 'bold',
         color: '#111827',
     },
     woDateRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4,
+        marginTop: 2,
     },
     woDateText: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#6b7280',
     },
     woValueBoxNew: {
         alignItems: 'flex-end',
-        marginRight: 8,
+        marginRight: 5,
     },
     woValueLabelNew: {
         fontSize: 10,
         color: '#9ca3af',
     },
     woValueAmountNew: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#f97316',
     },
     woExpandBtn: {
-        width: 32,
-        height: 32,
+        width: 27,
+        height: 27,
         borderRadius: 16,
         backgroundColor: '#f9fafb',
         justifyContent: 'center',
@@ -213,44 +213,44 @@ const styles = StyleSheet.create({
     woDivider: {
         height: 1,
         backgroundColor: '#f3f4f6',
-        marginVertical: 12,
+        marginVertical: 8,
     },
     woDetailsRow: {
         flexDirection: 'row',
-        gap: 24,
-        marginBottom: 16,
+        gap: 16,
+        marginBottom: 11,
     },
     woInfoBit: {
         flex: 1,
     },
     woInfoLabel: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#9ca3af',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     woInfoValue: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#111827',
     },
     woActionsContainer: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        marginBottom: 12,
-        gap: 12,
+        marginBottom: 8,
+        gap: 8,
         flexWrap: 'wrap',
     },
     btnFillForm: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#3b82f6',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingHorizontal: 11,
+        paddingVertical: 7,
         borderRadius: 8,
     },
     btnFillFormText: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: 'bold',
     },
     btnUploadBG: {
@@ -258,14 +258,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#f97316',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 5,
         borderRadius: 20,
         alignSelf: 'flex-start',
     },
     btnUploadBGText: {
         color: '#f97316',
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: '600',
     },
 
@@ -275,13 +275,13 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 14,
     },
     modalContent: {
         backgroundColor: '#fff',
         borderRadius: 12,
         width: '100%',
-        maxWidth: 500,
+        maxWidth: 425,
         maxHeight: '80%',
         overflow: 'hidden',
         flexShrink: 1,
@@ -290,34 +290,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#c1272d',
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
-        gap: 12,
+        padding: 11,
+        gap: 8,
     },
     modalHeaderIcon: {
-        width: 40,
-        height: 40,
+        width: 34,
+        height: 34,
         borderRadius: 8,
         backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     modalTitle: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#fff',
     },
     modalSubtitle: {
-        fontSize: 12,
+        fontSize: 10,
         color: 'rgba(255,255,255,0.8)',
     },
     modalTitleRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 8,
     },
     modalIconBoxGreen: {
-        width: 44,
-        height: 44,
+        width: 37,
+        height: 37,
         borderRadius: 8,
         backgroundColor: '#10b981',
         justifyContent: 'center',
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
         flexShrink: 1,
     },
     fieldContainer: {
-        gap: 8,
+        gap: 5,
     },
     fieldLabelRow: {
         flexDirection: 'row',
@@ -342,15 +342,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#f9fafb',
-        padding: 12,
+        padding: 8,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#f3f4f6',
-        gap: 12,
+        gap: 8,
     },
     fieldIconBox: {
-        width: 32,
-        height: 32,
+        width: 27,
+        height: 27,
         borderRadius: 6,
         backgroundColor: '#fff',
         justifyContent: 'center',
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
         borderColor: '#f3f4f6',
     },
     fieldValueText: {
-        fontSize: 13,
+        fontSize: 11,
         color: '#4b5563',
         flex: 1,
     },
@@ -367,31 +367,31 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        padding: 12,
+        padding: 8,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#e5e7eb',
         justifyContent: 'space-between',
     },
     dropdownText: {
-        fontSize: 13,
+        fontSize: 11,
         color: '#4b5563',
     },
     modalFooter: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        padding: 16,
+        padding: 11,
         borderTopWidth: 1,
         borderTopColor: '#f3f4f6',
-        gap: 16,
+        gap: 11,
     },
     btnCancel: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        paddingVertical: 5,
+        paddingHorizontal: 8,
     },
     btnCancelText: {
-        fontSize: 13,
+        fontSize: 11,
         color: '#6b7280',
         fontWeight: '600',
     },
@@ -399,14 +399,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#c1272d',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 7,
         borderRadius: 8,
-        gap: 8,
+        gap: 5,
     },
     btnSaveNextText: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: 'bold',
     },
 
@@ -418,14 +418,14 @@ const styles = StyleSheet.create({
     },
     formField: {
         width: isMobile ? '100%' : '50%',
-        paddingHorizontal: 8,
-        marginBottom: 16,
+        paddingHorizontal: 5,
+        marginBottom: 11,
     },
     formLabel: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: '500',
         color: '#4b5563',
-        marginBottom: 8,
+        marginBottom: 5,
     },
     inputWrapper: {
         flexDirection: 'row',
@@ -434,15 +434,15 @@ const styles = StyleSheet.create({
         borderColor: '#e5e7eb',
         borderRadius: 8,
         backgroundColor: '#fff',
-        paddingHorizontal: 12,
+        paddingHorizontal: 8,
     },
     inputIcon: {
-        marginRight: 10,
+        marginRight: 7,
     },
     input: {
         flex: 1,
-        paddingVertical: 10,
-        fontSize: 14,
+        paddingVertical: 7,
+        fontSize: 12,
         color: '#111827',
     },
     dropdownTrigger: {
@@ -453,21 +453,21 @@ const styles = StyleSheet.create({
         borderColor: '#e5e7eb',
         borderRadius: 8,
         backgroundColor: '#fff',
-        paddingHorizontal: 12,
-        paddingVertical: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 7,
     },
     dropdownValue: {
-        fontSize: 14,
+        fontSize: 12,
         color: '#111827',
     },
     sectionDivider: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#f8fafc',
-        padding: 12,
+        padding: 8,
         borderRadius: 8,
-        marginBottom: 20,
-        gap: 12,
+        marginBottom: 14,
+        gap: 8,
         borderWidth: 1,
         borderColor: '#f1f5f9',
     },
@@ -480,24 +480,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     sectionBadgeText: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#3b82f6',
     },
     sectionLabel: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#3b82f6',
     },
 
     // Photo Upload Styles
     photoUploadContainer: {
-        marginTop: 16,
-        paddingHorizontal: 8,
+        marginTop: 11,
+        paddingHorizontal: 5,
     },
     photoUploadBox: {
-        width: 120,
-        height: 120,
+        width: 102,
+        height: 102,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#e5e7eb',
@@ -505,10 +505,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#f9fafb',
-        marginTop: 8,
+        marginTop: 5,
     },
     photoUploadIcon: {
-        marginBottom: 8,
+        marginBottom: 5,
     },
     photoUploadText: {
         fontSize: 10,
@@ -518,17 +518,17 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 12,
-        gap: 4,
+        paddingHorizontal: 5,
+        paddingVertical: 8,
+        gap: 2,
     },
     coordinateLabel: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#6b7280',
     },
     coordinateInput: {
         flex: 1,
-        fontSize: 14,
+        fontSize: 12,
         color: '#111827',
         borderBottomWidth: 1,
         borderBottomColor: '#e5e7eb',
@@ -537,8 +537,8 @@ const styles = StyleSheet.create({
     btnUploadMaterial: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
+        paddingVertical: 7,
+        paddingHorizontal: 11,
         borderRadius: 8,
         backgroundColor: '#ecfdf5',
         borderWidth: 1,
@@ -547,38 +547,38 @@ const styles = StyleSheet.create({
     },
     btnUploadMaterialText: {
         color: '#059669',
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: 'bold',
-        marginLeft: 8,
+        marginLeft: 5,
     },
     materialForm: {
-        padding: 16,
-        gap: 16,
+        padding: 11,
+        gap: 11,
     },
     fileList: {
-        marginTop: 12,
+        marginTop: 8,
     },
     fileItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#f9fafb',
-        padding: 10,
+        padding: 7,
         borderRadius: 8,
-        marginBottom: 8,
+        marginBottom: 5,
         borderWidth: 1,
         borderColor: '#f3f4f6',
     },
     fileName: {
         flex: 1,
-        fontSize: 12,
+        fontSize: 10,
         color: '#4b5563',
-        marginLeft: 8,
+        marginLeft: 5,
     },
     btnPickFiles: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 12,
+        padding: 8,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#d1d5db',
@@ -586,16 +586,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9fafb',
     },
     btnPickFilesText: {
-        fontSize: 13,
+        fontSize: 11,
         color: '#6b7280',
         fontWeight: '500',
-        marginLeft: 8,
+        marginLeft: 5,
     },
     // Style refinements for Upload and Buttons
     btnActionRow: {
         flexDirection: 'row',
-        gap: 8,
-        marginTop: 8,
+        gap: 5,
+        marginTop: 5,
     },
     btnActionPrimary: {
         flex: 1,
@@ -603,13 +603,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#3b82f6',
-        paddingVertical: 10,
+        paddingVertical: 7,
         borderRadius: 8,
-        gap: 6,
+        gap: 4,
     },
     btnActionPrimaryText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
     },
     btnActionSecondary: {
@@ -620,32 +620,32 @@ const styles = StyleSheet.create({
         backgroundColor: '#ecfdf5',
         borderWidth: 1,
         borderColor: '#10b981',
-        paddingVertical: 10,
+        paddingVertical: 7,
         borderRadius: 8,
-        gap: 6,
+        gap: 4,
     },
     btnActionSecondaryText: {
         color: '#059669',
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
     },
     // Uploaded Documents in Work Order
     uploadedDocsContainer: {
         backgroundColor: '#f9fafb',
         borderRadius: 8,
-        padding: 12,
-        marginBottom: 12,
+        padding: 8,
+        marginBottom: 8,
         borderWidth: 1,
         borderColor: '#f3f4f6',
     },
     uploadedDocsHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        marginBottom: 10,
+        gap: 4,
+        marginBottom: 7,
     },
     uploadedDocsTitle: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#374151',
     },
@@ -653,22 +653,22 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        padding: 8,
+        padding: 5,
         borderRadius: 6,
-        marginBottom: 6,
+        marginBottom: 4,
         borderWidth: 1,
         borderColor: '#e5e7eb',
-        gap: 8,
+        gap: 5,
     },
     uploadedDocName: {
         flex: 1,
-        fontSize: 11,
+        fontSize: 10,
         color: '#4b5563',
     },
     // Back arrow for form
     btnBackArrow: {
-        width: 40,
-        height: 40,
+        width: 34,
+        height: 34,
         borderRadius: 8,
         backgroundColor: '#c1272d',
         justifyContent: 'center',
@@ -676,14 +676,14 @@ const styles = StyleSheet.create({
     },
     // File list refinements
     filePreview: {
-        width: 40,
-        height: 40,
+        width: 34,
+        height: 34,
         borderRadius: 4,
         backgroundColor: '#f3f4f6',
     },
     fileIconBox: {
-        width: 40,
-        height: 40,
+        width: 34,
+        height: 34,
         borderRadius: 4,
         backgroundColor: '#f3f4f6',
         justifyContent: 'center',
@@ -695,55 +695,55 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     removeFileBtn: {
-        padding: 8,
+        padding: 5,
     },
     // Selection Wide Modal
     selectionContentWide: {
         backgroundColor: '#fff',
         borderRadius: 16,
         width: '90%',
-        maxWidth: 400,
-        padding: 20,
+        maxWidth: 340,
+        padding: 14,
     },
     sourceGrid: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        paddingVertical: 24,
+        paddingVertical: 16,
     },
     sourceItem: {
         alignItems: 'center',
-        gap: 12,
+        gap: 8,
     },
     sourceIconBox: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        width: 47,
+        height: 47,
+        borderRadius: 23,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 2,
         shadowColor: '#000',
     },
     sourceText: {
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: '500',
         color: '#4b5563',
     },
     sourceCancelBtn: {
-        paddingVertical: 12,
+        paddingVertical: 8,
         alignItems: 'center',
         borderTopWidth: 1,
         borderTopColor: '#f3f4f6',
-        marginTop: 8,
+        marginTop: 5,
     },
     sourceCancelText: {
-        fontSize: 14,
+        fontSize: 12,
         color: '#6b7280',
         fontWeight: '600',
     },
     woActionRow: {
         flexDirection: 'row',
-        gap: 8,
-        marginBottom: 12,
+        gap: 5,
+        marginBottom: 8,
     },
     // Selection Modal Styles (Restored)
     selectionOverlay: {
@@ -761,27 +761,27 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 20,
+        padding: 14,
         borderBottomWidth: 1,
         borderBottomColor: '#f3f4f6',
     },
     selectionTitle: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#111827',
     },
     selectionScroll: {
-        padding: 10,
+        padding: 7,
     },
     selectionItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 16,
+        padding: 11,
         borderRadius: 8,
     },
     selectionText: {
-        fontSize: 14,
+        fontSize: 12,
         color: '#4b5563',
     },
     selectionTextSelected: {
@@ -789,37 +789,37 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     woAssetsContainer: {
-        marginTop: 16,
-        gap: 12,
+        marginTop: 11,
+        gap: 8,
     },
     woAssetsTitle: {
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: 'bold',
         color: '#374151',
-        marginBottom: 8,
+        marginBottom: 5,
     },
     woAssetCard: {
         backgroundColor: '#f9fafb',
         borderRadius: 8,
-        padding: 12,
+        padding: 8,
         borderWidth: 1,
         borderColor: '#e5e7eb',
     },
     woAssetHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        marginBottom: 12,
+        gap: 5,
+        marginBottom: 8,
     },
     woAssetName: {
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: '600',
         color: '#1f2937',
         flex: 1,
     },
     btnActionRowAsset: {
         flexDirection: 'row',
-        gap: 6,
+        gap: 4,
         flexWrap: 'wrap',
         flex: 1,
         justifyContent: 'flex-end',
@@ -831,11 +831,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#ecfdf5',
         borderWidth: 1,
         borderColor: '#10b981',
-        paddingVertical: 6,
-        paddingHorizontal: 8,
+        paddingVertical: 4,
+        paddingHorizontal: 5,
         borderRadius: 6,
-        gap: 4,
-        minWidth: 90,
+        gap: 2,
+        minWidth: 76,
     },
     btnActionSecondaryTextAsset: {
         color: '#059669',
@@ -847,11 +847,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#3b82f6',
-        paddingVertical: 6,
-        paddingHorizontal: 8,
+        paddingVertical: 4,
+        paddingHorizontal: 5,
         borderRadius: 6,
-        gap: 4,
-        minWidth: 90,
+        gap: 2,
+        minWidth: 76,
     },
     btnActionPrimaryTextAsset: {
         color: '#fff',
@@ -865,64 +865,64 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderWidth: 1,
         borderColor: '#f97316',
-        paddingVertical: 8,
-        paddingHorizontal: 4,
+        paddingVertical: 5,
+        paddingHorizontal: 2,
         borderRadius: 6,
-        gap: 4,
+        gap: 2,
     },
     btnUploadBGTextAsset: {
         color: '#f97316',
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '600',
     },
     emptyAssetsText: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#9ca3af',
         fontStyle: 'italic',
-        marginTop: 8,
+        marginTop: 5,
     },
     fileItemBg: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 8,
+        padding: 5,
         backgroundColor: '#ecfdf5',
         borderRadius: 6,
-        marginTop: 6,
-        gap: 6,
+        marginTop: 4,
+        gap: 4,
     },
     fileNameBg: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#059669',
         flex: 1,
     },
     bgSectionContainer: {
-        padding: 12,
+        padding: 8,
         backgroundColor: '#fff',
     },
     bgSectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 7,
     },
     btnAddBGHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        paddingVertical: 4,
-        paddingHorizontal: 8,
+        gap: 2,
+        paddingVertical: 2,
+        paddingHorizontal: 5,
         borderRadius: 4,
         backgroundColor: '#eff6ff',
         borderWidth: 1,
         borderColor: '#3b82f6',
     },
     btnAddBGHeaderText: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#3b82f6',
         fontWeight: 'bold',
     },
     emptyBGCard: {
-        padding: 12,
+        padding: 8,
         backgroundColor: '#f9fafb',
         borderRadius: 8,
         borderStyle: 'dashed',
@@ -931,17 +931,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyBGText: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#6b7280',
         fontStyle: 'italic',
     },
     bgListContainer: {
-        gap: 8,
+        gap: 5,
     },
     bgItemCard: {
         backgroundColor: '#f8fafc',
         borderRadius: 6,
-        padding: 10,
+        padding: 7,
         borderLeftWidth: 3,
         borderLeftColor: '#3b82f6',
         shadowColor: '#000',
@@ -950,27 +950,27 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     bgBankName: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#1e293b',
         flex: 1,
     },
     bgAmount: {
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: '800',
         color: '#10b981',
     },
     bgItemBody: {
         flexDirection: 'row',
-        gap: 12,
+        gap: 8,
     },
     bgDetailRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 2,
     },
     bgDetailText: {
         fontSize: 10,
@@ -979,45 +979,45 @@ const styles = StyleSheet.create({
     woAssetCardEnhanced: {
         backgroundColor: '#fff',
         borderRadius: 10,
-        padding: 12,
+        padding: 8,
         borderWidth: 1,
         borderColor: '#e5e7eb',
-        marginBottom: 12,
+        marginBottom: 8,
         shadowColor: '#000',
     },
     woAssetHeaderEnhanced: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
-        gap: 10,
+        marginBottom: 8,
+        gap: 7,
         flexWrap: 'wrap',
     },
     assetIconBoxSmall: {
-        width: 32,
-        height: 32,
+        width: 27,
+        height: 27,
         borderRadius: 16,
         backgroundColor: '#f3f4f6',
         alignItems: 'center',
         justifyContent: 'center',
     },
     woAssetNameEnhanced: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#111827',
         maxWidth: width * 0.4,
     },
     installationsListContainer: {
-        marginTop: 8,
-        paddingTop: 8,
+        marginTop: 5,
+        paddingTop: 5,
         borderTopWidth: 1,
         borderTopColor: '#f3f4f6',
     },
     installationsListTitle: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#6b7280',
-        marginBottom: 8,
+        marginBottom: 5,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
@@ -1026,16 +1026,16 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: '#f9fafb',
-        padding: 8,
+        padding: 5,
         borderRadius: 6,
-        marginBottom: 6,
+        marginBottom: 4,
         borderWidth: 1,
         borderColor: '#f3f4f6',
     },
     installationInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 5,
         flex: 1,
     },
     instBadge: {
@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
         color: '#4b5563',
     },
     instTitle: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: '600',
         color: '#374151',
     },
@@ -1063,7 +1063,7 @@ const styles = StyleSheet.create({
     instStatusLine: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 4,
     },
     statusDot: {
         width: 6,
@@ -1076,28 +1076,28 @@ const styles = StyleSheet.create({
         color: '#4b5563',
     },
     btnEditInst: {
-        padding: 4,
-        marginLeft: 4,
+        padding: 2,
+        marginLeft: 2,
     },
     emptyInstallText: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#9ca3af',
         fontStyle: 'italic',
         textAlign: 'center',
-        paddingVertical: 8,
+        paddingVertical: 5,
     },
     // New Redesigned Styles
     woCardNew: {
         backgroundColor: '#fff',
         borderRadius: 12,
-        marginBottom: 16,
+        marginBottom: 11,
         borderWidth: 1,
         borderColor: '#e5e7eb',
         overflow: 'hidden',
     },
     woCardHeaderNew: {
         flexDirection: 'row',
-        padding: 16,
+        padding: 11,
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: '#fff',
@@ -1108,31 +1108,31 @@ const styles = StyleSheet.create({
     woHeaderTitleRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 4,
     },
     woHeaderId: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#000',
     },
     btnEditWO: {
-        padding: 4,
-        marginLeft: 8,
+        padding: 2,
+        marginLeft: 5,
     },
     woHeaderDateRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        marginTop: 4,
+        gap: 2,
+        marginTop: 2,
     },
     woHeaderDate: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#6b7280',
     },
     woHeaderRight: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 16,
+        gap: 11,
     },
     woValueContainer: {
         alignItems: 'flex-end',
@@ -1143,48 +1143,48 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     woValueText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '900',
         color: '#f97316',
     },
     woExpandIconBox: {
-        width: 32,
-        height: 32,
+        width: 27,
+        height: 27,
         borderRadius: 16,
         backgroundColor: '#f3f4f6',
         alignItems: 'center',
         justifyContent: 'center',
     },
     woContentNew: {
-        padding: 16,
+        padding: 11,
         paddingTop: 0,
         borderTopWidth: 1,
         borderTopColor: '#f3f4f6',
     },
     woInfoGridNew: {
         flexDirection: 'row',
-        paddingVertical: 16,
-        gap: 32,
+        paddingVertical: 11,
+        gap: 22,
     },
     woInfoItemNew: {
         flex: 1,
     },
     woInfoLabelNew: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#9ca3af',
-        marginBottom: 4,
+        marginBottom: 2,
         fontWeight: '500',
     },
     woInfoValueNew: {
-        fontSize: 14,
+        fontSize: 12,
         color: '#111827',
         fontWeight: '700',
     },
     subSectionHeaderNew: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        marginVertical: 12,
+        gap: 5,
+        marginVertical: 8,
     },
     subSectionIconBoxNew: {
         width: 24,
@@ -1197,7 +1197,7 @@ const styles = StyleSheet.create({
         borderColor: '#ffedd5',
     },
     subSectionTitleNew: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#6b7280',
         textTransform: 'uppercase',
@@ -1206,108 +1206,108 @@ const styles = StyleSheet.create({
     assetCardNew: {
         backgroundColor: '#fff',
         borderRadius: 8,
-        padding: 12,
+        padding: 8,
         borderWidth: 1,
         borderColor: '#f2f2f2',
-        marginBottom: 16,
+        marginBottom: 11,
     },
     assetHeaderNew: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 11,
         flexWrap: 'wrap',
-        gap: 8,
+        gap: 5,
     },
     assetNameNew: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#111827',
     },
     assetSubtextNew: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#6b7280',
         marginTop: 2,
     },
     btnAddInstallationNew: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
+        gap: 4,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#f97316',
     },
     btnAddInstallationText: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#f97316',
         fontWeight: 'bold',
     },
     installationRowNew: {
         flexDirection: 'row',
-        paddingTop: 12,
+        paddingTop: 8,
         borderTopWidth: 1,
         borderTopColor: '#f3f4f6',
-        marginTop: 12,
+        marginTop: 8,
         flexWrap: 'wrap',
-        gap: 16,
+        gap: 11,
     },
     installationDetails: {
         flex: 1,
-        minWidth: 280,
-        gap: 6,
+        minWidth: 238,
+        gap: 4,
     },
     instDetailLine: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 4,
     },
     instDetailLineIndent: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        paddingLeft: 20,
+        gap: 4,
+        paddingLeft: 14,
     },
     instDetailLabel: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#4b5563',
     },
     instDetailValue: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#6b7280',
         flexShrink: 1,
     },
     instDetailLineIndentNew: {
-        paddingLeft: 18,
+        paddingLeft: 12,
         marginTop: -2,
     },
     instDetailSubValueNew: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#6b7280',
     },
     instStatusRow: {
         flexDirection: 'row',
-        gap: 8,
-        marginTop: 8,
+        gap: 5,
+        marginTop: 5,
     },
     statusBadgeInstalled: {
         backgroundColor: '#ecfdf5',
         paddingVertical: 2,
-        paddingHorizontal: 8,
+        paddingHorizontal: 5,
         borderRadius: 12,
     },
     statusBadgeApproved: {
         backgroundColor: '#ecfdf5',
         paddingVertical: 2,
-        paddingHorizontal: 8,
+        paddingHorizontal: 5,
         borderRadius: 12,
     },
     statusBadgePending: {
         backgroundColor: '#fff7ed',
         paddingVertical: 2,
-        paddingHorizontal: 8,
+        paddingHorizontal: 5,
         borderRadius: 12,
     },
     statusBadgeTextGreen: {
@@ -1322,26 +1322,26 @@ const styles = StyleSheet.create({
     },
     instActionBtnRow: {
         flexDirection: 'row',
-        gap: 8,
-        marginTop: 12,
+        gap: 5,
+        marginTop: 8,
         flexWrap: 'wrap',
     },
     btnApproveInst: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 2,
         backgroundColor: '#059669',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
+        paddingVertical: 2,
+        paddingHorizontal: 5,
         borderRadius: 4,
     },
     btnRejectInst: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 2,
         backgroundColor: '#dc2626',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
+        paddingVertical: 2,
+        paddingHorizontal: 5,
         borderRadius: 4,
     },
     btnActionTextWhite: {
@@ -1351,103 +1351,103 @@ const styles = StyleSheet.create({
     },
     installationActions: {
         flex: 1,
-        minWidth: 220,
+        minWidth: 187,
         alignItems: 'flex-start',
-        gap: 12,
+        gap: 8,
     },
     instMainActions: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 8,
         flexWrap: 'wrap',
     },
     btnAssetMaterial: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        paddingVertical: 6,
-        paddingHorizontal: 8,
+        gap: 2,
+        paddingVertical: 4,
+        paddingHorizontal: 5,
     },
     btnAssetPreview: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
+        gap: 2,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
         borderRadius: 6,
         borderWidth: 1,
         borderColor: '#059669',
     },
     btnActionTextGreen: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#059669',
         fontWeight: 'bold',
     },
     btnAssetModify: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        paddingVertical: 6,
-        paddingHorizontal: 16,
+        gap: 2,
+        paddingVertical: 4,
+        paddingHorizontal: 11,
         borderRadius: 6,
         borderWidth: 1,
         borderColor: '#f97316',
     },
     btnActionTextOrange: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#f97316',
         fontWeight: 'bold',
     },
     btnAssetUpload: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
+        gap: 2,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
         borderRadius: 6,
         borderWidth: 1,
         borderColor: '#3b82f6',
     },
     btnActionTextBlue: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#3b82f6',
         fontWeight: 'bold',
     },
     instSubActionsRow: {
-        marginTop: 4,
-        gap: 10,
+        marginTop: 2,
+        gap: 7,
         flexDirection: 'row',
         flexWrap: 'wrap',
     },
     instFillUploadContainer: {
         flexDirection: 'row',
-        gap: 8,
+        gap: 5,
         flexWrap: 'wrap',
     },
     btnAssetFill: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
+        gap: 2,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
         borderRadius: 6,
         backgroundColor: '#3b82f6',
-        minWidth: 80,
+        minWidth: 68,
         justifyContent: 'center',
     },
     bgCardNew: {
         backgroundColor: '#fff',
         borderRadius: 8,
-        padding: 12,
+        padding: 8,
         borderWidth: 1,
         borderColor: '#f2f2f2',
-        marginBottom: 12,
+        marginBottom: 8,
     },
     bgCardMain: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingBottom: 12,
+        paddingBottom: 8,
         borderBottomWidth: 1,
         borderBottomColor: '#f3f4f6',
     },
@@ -1455,19 +1455,19 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     bgBankNameNew: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#111827',
     },
     bgNumberNew: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#6b7280',
         marginTop: 2,
     },
     bgInfoRight: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 8,
     },
     bgValueColumn: {
         alignItems: 'flex-end',
@@ -1478,15 +1478,15 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     bgValueTextNew: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '900',
         color: '#f97316',
     },
     btnBGIcon: {
-        padding: 4,
+        padding: 2,
     },
     btnBGIconUpload: {
-        padding: 6,
+        padding: 4,
         borderRadius: 6,
         borderWidth: 1,
         borderColor: '#ffedd5',
@@ -1495,7 +1495,7 @@ const styles = StyleSheet.create({
     },
     bgDatesGrid: {
         flexDirection: 'row',
-        paddingTop: 12,
+        paddingTop: 8,
     },
     bgDateItem: {
         flex: 1,
@@ -1506,7 +1506,7 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     bgDateText: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#111827',
         fontWeight: '600',
     },
@@ -1514,75 +1514,75 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingTop: 16,
-        marginTop: 16,
+        paddingTop: 11,
+        marginTop: 11,
         borderTopWidth: 1,
         borderTopColor: '#f3f4f6',
         flexWrap: 'wrap',
-        gap: 12,
+        gap: 8,
     },
     btnUploadBGMain: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        gap: 4,
+        paddingVertical: 5,
+        paddingHorizontal: 8,
         borderRadius: 20,
         borderWidth: 1,
         borderColor: '#f97316',
     },
     btnUploadBGMainText: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#f97316',
         fontWeight: 'bold',
     },
     woFooterBtns: {
         flexDirection: 'row',
-        gap: 12,
+        gap: 8,
     },
     btnWOSecondary: {
         backgroundColor: '#dc2626',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        paddingVertical: 7,
+        paddingHorizontal: 14,
         borderRadius: 10,
     },
     btnWOSecondaryText: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
     },
     btnWOPrimary: {
         backgroundColor: '#059669',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        paddingVertical: 7,
+        paddingHorizontal: 14,
         borderRadius: 10,
     },
     btnWOPrimaryText: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
     },
     // Missing Installation Styles
     instDocList: {
-        marginTop: 10,
+        marginTop: 7,
         backgroundColor: '#fdf2f2',
         borderRadius: 8,
-        padding: 8,
-        gap: 6,
+        padding: 5,
+        gap: 4,
     },
     instDocItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        padding: 8,
+        padding: 5,
         borderRadius: 6,
         borderWidth: 1,
         borderColor: '#fee2e2',
-        gap: 8,
+        gap: 5,
     },
     instDocName: {
         flex: 1,
-        fontSize: 11,
+        fontSize: 10,
         color: '#b91c1c',
     },
 });
@@ -2765,7 +2765,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
 
                         <View style={styles.modalBody}>
                             {currentStep === 0 && (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 11, gap: 11 }}>
                                     <View style={styles.fieldContainer}>
                                         <View style={styles.fieldLabelRow}>
                                             <MaterialCommunityIcons name="file-document-outline" size={14} color="#6b7280" />
@@ -2834,7 +2834,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             )}
 
                             {currentStep === 1 && (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 11, gap: 11 }}>
                                     <View style={styles.sectionDivider}>
                                         <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>A</Text></View>
                                         <Text style={styles.sectionLabel}>Beneficiary Information</Text>
@@ -2868,7 +2868,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             )}
 
                             {currentStep === 2 && (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 11, gap: 11 }}>
                                     <View style={styles.sectionDivider}>
                                         <View style={[styles.sectionBadge, { backgroundColor: '#ffedd5' }]}><Text style={[styles.sectionBadgeText, { color: '#f97316' }]}>B</Text></View>
                                         <Text style={[styles.sectionLabel, { color: '#f97316' }]}>Location Information</Text>
@@ -2888,7 +2888,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             )}
 
                             {currentStep === 3 && (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 11, gap: 11 }}>
                                     <View style={styles.sectionDivider}>
                                         <View style={[styles.sectionBadge, { backgroundColor: '#f3e8ff' }]}><Text style={[styles.sectionBadgeText, { color: '#9333ea' }]}>3</Text></View>
                                         <Text style={[styles.sectionLabel, { color: '#9333ea' }]}>Asset Technical Details</Text>
@@ -2904,7 +2904,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             )}
 
                             {currentStep === 4 && (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 11, gap: 11 }}>
                                     <View style={styles.sectionDivider}>
                                         <View style={[styles.sectionBadge, { backgroundColor: '#dbeafe' }]}><Text style={[styles.sectionBadgeText, { color: '#3b82f6' }]}>4</Text></View>
                                         <Text style={[styles.sectionLabel, { color: '#3b82f6' }]}>Installation Location</Text>
@@ -2949,7 +2949,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             )}
 
                             {currentStep === 5 && (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 11, gap: 11 }}>
                                     <View style={styles.sectionDivider}>
                                         <View style={[styles.sectionBadge, { backgroundColor: '#fef3c7' }]}><Text style={[styles.sectionBadgeText, { color: '#d97706' }]}>5</Text></View>
                                         <Text style={[styles.sectionLabel, { color: '#d97706' }]}>Documents Upload</Text>
@@ -2958,14 +2958,14 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                         <View style={styles.formField}>
                                             <Text style={styles.formLabel}>Installation Photo</Text>
                                             {formData.installationPhoto ? (
-                                                <Image source={{ uri: formData.installationPhoto }} style={{ width: 100, height: 100, borderRadius: 8, marginBottom: 8 }} />
+                                                <Image source={{ uri: formData.installationPhoto }} style={{ width: 85, height: 85, borderRadius: 8, marginBottom: 5 }} />
                                             ) : (
                                                 <View style={[styles.photoUploadBox, { marginTop: 0 }]}>
                                                     <Feather name="image" size={24} color="#9ca3af" />
                                                 </View>
                                             )}
                                             <TouchableOpacity
-                                                style={[styles.btnUploadBG, { marginTop: 8 }]}
+                                                style={[styles.btnUploadBG, { marginTop: 5 }]}
                                                 onPress={() => handleAddFileChoice((asset) => updateFormData('installationPhoto', asset.uri))}
                                             >
                                                 <Feather name="upload-cloud" size={16} color="#f97316" />
@@ -2999,21 +2999,21 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                             )}
 
                             {currentStep === 6 && (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 11, gap: 11 }}>
                                     <View style={styles.sectionDivider}>
                                         <View style={[styles.sectionBadge, { backgroundColor: '#f3e8ff' }]}><Text style={[styles.sectionBadgeText, { color: '#9333ea' }]}>6</Text></View>
                                         <Text style={[styles.sectionLabel, { color: '#9333ea' }]}>Component Asset Details</Text>
                                     </View>
-                                    <View style={{ paddingBottom: 20 }}>
-                                        <Text style={[styles.placeholderSubtitle, { marginBottom: 16 }]}>Add technical specifications for each component category</Text>
+                                    <View style={{ paddingBottom: 14 }}>
+                                        <Text style={[styles.placeholderSubtitle, { marginBottom: 11 }]}>Add technical specifications for each component category</Text>
 
                                         {formData.componentValues.length > 0 ? (
                                             formData.componentValues.map((comp, idx) => (
                                                 <View key={idx} style={styles.fieldValueBox}>
                                                     <View style={{ flex: 1 }}>
-                                                        <Text style={{ fontSize: 13, fontWeight: 'bold' }}>Category ID: {comp.CategoryId}</Text>
-                                                        <Text style={{ fontSize: 12, color: '#666' }}>Header ID: {comp.HeaderId} | Row: {comp.RowIndex}</Text>
-                                                        <Text style={{ fontSize: 13, marginTop: 4 }}>Value: {comp.ValueText}</Text>
+                                                        <Text style={{ fontSize: 11, fontWeight: 'bold' }}>Category ID: {comp.CategoryId}</Text>
+                                                        <Text style={{ fontSize: 10, color: '#666' }}>Header ID: {comp.HeaderId} | Row: {comp.RowIndex}</Text>
+                                                        <Text style={{ fontSize: 11, marginTop: 2 }}>Value: {comp.ValueText}</Text>
                                                     </View>
                                                 </View>
                                             ))
@@ -3072,7 +3072,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                         </View>
 
                         <View style={styles.modalBody}>
-                            <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
+                            <ScrollView style={{ maxHeight: 425 }} showsVerticalScrollIndicator={false}>
                                 <View style={styles.materialForm}>
                                     {(() => {
                                         const asset = selectedWorkOrder?.Assets?.find(a => (a.AssetId || a.Id) === materialAssetId);
@@ -3143,7 +3143,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                             <Feather name="file-text" size={16} color="#6b7280" />
                                                         </View>
                                                     )}
-                                                    <View style={{ flex: 1, marginLeft: 8 }}>
+                                                    <View style={{ flex: 1, marginLeft: 5 }}>
                                                         <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
                                                         <Text style={styles.fileStatus}>Ready to upload</Text>
                                                     </View>
@@ -3255,7 +3255,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                     </View>
 
                                     {/* Dates Row */}
-                                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                                    <View style={{ flexDirection: 'row', gap: 8 }}>
                                         <View style={[styles.formField, { flex: 1 }]}>
                                             <Text style={styles.formLabel}>
                                                 Issue Date <Text style={{ color: '#dc2626' }}>*</Text>
@@ -3268,7 +3268,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                 }}
                                             >
                                                 <View style={styles.inputIcon}><Feather name="calendar" size={14} color="#6b7280" /></View>
-                                                <Text style={[styles.input, { textAlignVertical: 'center', paddingTop: 12, color: bgFormData.issueDate ? '#1e293b' : '#9ca3af' }]}>
+                                                <Text style={[styles.input, { textAlignVertical: 'center', paddingTop: 8, color: bgFormData.issueDate ? '#1e293b' : '#9ca3af' }]}>
                                                     {bgFormData.issueDate || 'DD/MM/YYYY'}
                                                 </Text>
                                             </TouchableOpacity>
@@ -3286,7 +3286,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                                 }}
                                             >
                                                 <View style={styles.inputIcon}><Feather name="calendar" size={14} color="#6b7280" /></View>
-                                                <Text style={[styles.input, { textAlignVertical: 'center', paddingTop: 12, color: bgFormData.expiryDate ? '#1e293b' : '#9ca3af' }]}>
+                                                <Text style={[styles.input, { textAlignVertical: 'center', paddingTop: 8, color: bgFormData.expiryDate ? '#1e293b' : '#9ca3af' }]}>
                                                     {bgFormData.expiryDate || 'DD/MM/YYYY'}
                                                 </Text>
                                             </TouchableOpacity>
@@ -3312,7 +3312,7 @@ const TenderDetailsScreen = ({ route, navigation }: any) => {
                                     <View style={styles.formField}>
                                         <Text style={styles.formLabel}>BG Document <Text style={{ color: '#dc2626' }}>*</Text></Text>
                                         <TouchableOpacity
-                                            style={[styles.btnUploadBG, { marginTop: 4, width: '100%', justifyContent: 'center' }]}
+                                            style={[styles.btnUploadBG, { marginTop: 2, width: '100%', justifyContent: 'center' }]}
                                             onPress={handleAddBGDocument}
                                         >
                                             <Feather name="upload" size={16} color="#4b5563" />

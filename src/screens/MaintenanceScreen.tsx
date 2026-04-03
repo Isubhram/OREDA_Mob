@@ -374,35 +374,35 @@ const styles = StyleSheet.create({
     },
     loadingWrapper: {
         flex: 1,
-        paddingHorizontal: 16
+        paddingHorizontal: 11
     },
     headerContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 8,
+        paddingHorizontal: 11,
+        paddingTop: 8,
+        paddingBottom: 5,
         backgroundColor: '#f8fafc',
     },
     topHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16
+        marginBottom: 11
     },
     title: { 
-        fontSize: 28, 
+        fontSize: 26, 
         fontWeight: '800', 
         color: '#0f172a',
         letterSpacing: -0.5
     },
     subtitle: { 
-        fontSize: 14, 
+        fontSize: 12, 
         color: '#64748b', 
         marginTop: 2,
         fontWeight: '500'
     },
     notificationBtn: {
-        width: 44,
-        height: 44,
+        width: 37,
+        height: 37,
         borderRadius: 22,
         backgroundColor: '#fff',
         justifyContent: 'center',
@@ -430,18 +430,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         backgroundColor: '#f1f5f9',
         borderRadius: 14,
-        padding: 4,
-        marginBottom: 16,
-        gap: 4
+        padding: 2,
+        marginBottom: 11,
+        gap: 2
     },
     tab: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 10,
+        paddingVertical: 7,
         borderRadius: 10,
-        gap: 8
+        gap: 5
     },
     activeTab: {
         backgroundColor: '#c1272d',
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     tabText: {
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: '700',
         color: '#64748b'
     },
@@ -464,11 +464,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#fff',
         borderRadius: 16,
-        paddingHorizontal: 14,
-        height: 52,
+        paddingHorizontal: 9,
+        height: 44,
         borderWidth: 1,
         borderColor: '#e2e8f0',
-        marginBottom: 16,
+        marginBottom: 11,
         elevation: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -476,28 +476,28 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     searchIcon: {
-        marginRight: 10
+        marginRight: 7
     },
     searchInput: {
         flex: 1,
-        fontSize: 15,
+        fontSize: 13,
         color: '#1e293b',
         fontWeight: '500'
     },
     filterWrapper: {
         marginHorizontal: -16,
-        marginBottom: 8
+        marginBottom: 5
     },
     filterList: {
-        paddingHorizontal: 16,
-        paddingBottom: 4
+        paddingHorizontal: 11,
+        paddingBottom: 2
     },
     filterChip: {
-        paddingHorizontal: 18,
-        paddingVertical: 10,
-        borderRadius: 25,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 21,
         backgroundColor: '#fff',
-        marginRight: 10,
+        marginRight: 7,
         borderWidth: 1,
         borderColor: '#e2e8f0',
         elevation: 1,
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
     },
     filterLabel: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '600',
         color: '#64748b'
     },
@@ -515,18 +515,18 @@ const styles = StyleSheet.create({
         color: '#fff'
     },
     listContent: { 
-        paddingBottom: 24 
+        paddingBottom: 16 
     },
     columnWrapper: {
         justifyContent: 'space-between',
-        paddingHorizontal: 16
+        paddingHorizontal: 11
     },
     card: {
         backgroundColor: '#fff',
         borderRadius: 20,
-        padding: 14,
+        padding: 9,
         width: CARD_WIDTH,
-        marginBottom: 16,
+        marginBottom: 11,
         borderWidth: 1,
         borderColor: '#f1f5f9',
         elevation: 3,
@@ -539,29 +539,29 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: 12
+        marginBottom: 8
     },
     tagRow: {
         flexDirection: 'column',
-        gap: 4,
+        gap: 2,
         flex: 1,
-        marginRight: 4
+        marginRight: 2
     },
     statusTag: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        paddingHorizontal: 5,
+        paddingVertical: 2,
         borderRadius: 8,
         alignSelf: 'flex-start'
     },
     categoryTag: {
-        paddingHorizontal: 8,
+        paddingHorizontal: 5,
         paddingVertical: 2,
         borderRadius: 4,
         backgroundColor: '#f1f5f9',
         alignSelf: 'flex-start'
     },
     categoryTagText: {
-        fontSize: 9,
+        fontSize: 10,
         color: '#64748b',
         fontWeight: '700',
         textTransform: 'uppercase'
@@ -572,52 +572,52 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase'
     },
     dateTag: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#94a3b8',
         fontWeight: '600'
     },
     ticketSubject: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '700',
         color: '#1e293b',
         lineHeight: 20,
-        height: 40, // Fixed height for 2 lines
-        marginBottom: 8
+        height: 34, // Fixed height for 2 lines
+        marginBottom: 5
     },
     scheduleInfo: {
-        gap: 8,
-        marginBottom: 12
+        gap: 5,
+        marginBottom: 8
     },
     scheduleRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6
+        gap: 4
     },
     vendorRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 4,
         marginBottom: 2
     },
     vendorName: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#64748b',
         fontWeight: '600'
     },
     scheduleDate: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: '700',
         color: '#c1272d'
     },
     beneficiaryName: {
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: '600',
         color: '#1e293b'
     },
     locationRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        gap: 4
+        gap: 2
     },
     locationText: {
         fontSize: 10,
@@ -628,11 +628,11 @@ const styles = StyleSheet.create({
     projectWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        marginBottom: 12
+        gap: 2,
+        marginBottom: 8
     },
     projectName: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#64748b',
         flex: 1,
         fontWeight: '500'
@@ -641,60 +641,60 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingTop: 10,
+        paddingTop: 7,
         borderTopWidth: 1,
         borderTopColor: '#f1f5f9'
     },
     ticketId: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#94a3b8',
         flex: 1,
-        marginRight: 4
+        marginRight: 2
     },
     moreIconBox: {
-        width: 28,
-        height: 28,
+        width: 23,
+        height: 23,
         borderRadius: 14,
         backgroundColor: '#c1272d',
         justifyContent: 'center',
         alignItems: 'center'
     },
     emptyContainer: {
-        paddingTop: 60,
+        paddingTop: 42,
         alignItems: 'center',
-        paddingHorizontal: 40
+        paddingHorizontal: 28
     },
     emptyIconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 68,
+        height: 68,
+        borderRadius: 34,
         backgroundColor: '#f1f5f9',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20
+        marginBottom: 14
     },
     emptyTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#1e293b',
-        marginBottom: 8
+        marginBottom: 5
     },
     emptySubtitle: {
-        fontSize: 14,
+        fontSize: 12,
         color: '#64748b',
         textAlign: 'center',
         lineHeight: 20,
-        marginBottom: 24
+        marginBottom: 16
     },
     resetBtn: {
-        paddingHorizontal: 24,
-        paddingVertical: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
         borderRadius: 12,
         backgroundColor: '#f1f5f9',
     },
     resetBtnText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '600',
         color: '#1e293b'
     },
@@ -702,14 +702,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginTop: 10
+        marginTop: 7
     },
     skeletonCard: {
         width: CARD_WIDTH,
-        height: 160,
+        height: 136,
         backgroundColor: '#fff',
         borderRadius: 20,
-        marginBottom: 16,
+        marginBottom: 11,
         overflow: 'hidden'
     }
 });

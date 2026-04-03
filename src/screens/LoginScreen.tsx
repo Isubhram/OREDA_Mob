@@ -245,7 +245,7 @@ const LoginScreen = () => {
                                         style={[styles.toggleButton, loginType === 'userId' && styles.activeToggle]}
                                         onPress={() => setLoginType('userId')}
                                     >
-                                        <Text style={[styles.toggleText, loginType === 'userId' && styles.activeToggleText]}>UserId Login</Text>
+                                        <Text style={[styles.toggleText, loginType === 'userId' && styles.activeToggleText]}>Account Login</Text>
                                     </TouchableOpacity>
                                 </View>
 
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         marginBottom: 15,
-        fontSize: 15,
+        fontSize: 12,
         color: '#1e293b',
     },
     passwordContainer: {

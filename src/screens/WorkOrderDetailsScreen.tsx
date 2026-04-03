@@ -41,7 +41,7 @@ const WorkOrderDetailsScreen = () => {
     const [installedAssetId, setInstalledAssetId] = useState<number | null>(null);
     const [draftId, setDraftId] = useState<number | null>(null);
     const [loadingDraft, setLoadingDraft] = useState(false);
-    
+
     // RAW MATERIAL MODAL STATE
     const [isRmModalVisible, setIsRmModalVisible] = useState(false);
     const [selectedInstRM, setSelectedInstRM] = useState<{ inst: any, asset: any } | null>(null);
@@ -375,15 +375,15 @@ const WorkOrderDetailsScreen = () => {
                     AreaLocality: formData.areaLocality,
                 };
             } else if (currentStep === 3) {
-              payload.Step4 = {
-                  Capacity: formData.capacity,
-                  CmcPeriod: formData.cmcPeriod,
-              };
+                payload.Step4 = {
+                    Capacity: formData.capacity,
+                    CmcPeriod: formData.cmcPeriod,
+                };
             } else if (currentStep === 4) {
-              payload.Step5 = {
-                  Latitude: parseFloat(formData.latitude),
-                  Longitude: parseFloat(formData.longitude),
-              };
+                payload.Step5 = {
+                    Latitude: parseFloat(formData.latitude),
+                    Longitude: parseFloat(formData.longitude),
+                };
             }
 
             // Save draft
@@ -396,7 +396,7 @@ const WorkOrderDetailsScreen = () => {
                 setCurrentStep(currentStep + 1);
             } else {
                 Alert.alert(
-                    'Success', 
+                    'Success',
                     'Installation details have been captured successfully.',
                     [{ text: 'OK', onPress: () => setIsFormModalVisible(false) }]
                 );
@@ -415,7 +415,7 @@ const WorkOrderDetailsScreen = () => {
         const photos = [];
         if (installedAsset.InstallationPhoto) photos.push(installedAsset.InstallationPhoto);
         if (installedAsset.BeneficiaryPhoto) photos.push(installedAsset.BeneficiaryPhoto);
-        
+
         // If there are documents, we could show them as well if they are images
         if (installedAsset.MaterialVerificationDocuments) {
             installedAsset.MaterialVerificationDocuments.forEach((doc: any) => {
@@ -496,7 +496,7 @@ const WorkOrderDetailsScreen = () => {
         try {
             const formData = new FormData();
             formData.append('WorkOrderInstalledAssetDetailsId', selectedInstRM.inst.WorkOrderInstalledAssetDetailsId || selectedInstRM.inst.Id);
-            
+
             // Only upload new photos
             const newPhotos = rmPhotos.filter(p => !p.isExisting);
             newPhotos.forEach((photo, index) => {
@@ -639,7 +639,7 @@ const WorkOrderDetailsScreen = () => {
                             <View style={styles.sectionBadge}><Text style={styles.sectionBadgeText}>1</Text></View>
                             <Text style={styles.sectionLabel}>Asset Information</Text>
                         </View>
-                        
+
                         <View style={styles.formGrid}>
                             <View style={styles.formFieldRow}>
                                 <Text style={styles.formFieldLabel}>Project Name</Text>
@@ -755,7 +755,7 @@ const WorkOrderDetailsScreen = () => {
                             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end' }}>
                                 <View style={{ flex: 1 }}>{renderFormField("Latitude", 'latitude', <Feather name="navigation" size={16} color="#9ca3af" />, "Lat")}</View>
                                 <View style={{ flex: 1 }}>{renderFormField("Longitude", 'longitude', <Feather name="navigation-2" size={16} color="#9ca3af" />, "Long")}</View>
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     style={{ height: 44, width: 44, borderRadius: 8, backgroundColor: '#c1272d', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}
                                     onPress={handleGetCurrentLocation}
                                     disabled={isCapturingLocation}
@@ -785,7 +785,7 @@ const WorkOrderDetailsScreen = () => {
                                     )}
                                 </TouchableOpacity>
                             </View>
-                            
+
                             <View style={{ width: '100%', marginBottom: 16 }}>
                                 <Text style={styles.formFieldLabel}>Installation Certificate (PDF/Image)</Text>
                                 <TouchableOpacity style={styles.docPickerBtn} onPress={() => handleAddFileChoice((asset) => updateFormData('installationCertificate', asset), true)}>
@@ -816,7 +816,7 @@ const WorkOrderDetailsScreen = () => {
                     </View>
                 );
 
-            default: 
+            default:
                 return (
                     <View style={styles.modalBodyPadding}>
                         <Text>Unknown Step: {currentStep}</Text>
@@ -1071,7 +1071,7 @@ const WorkOrderDetailsScreen = () => {
 
                                                                 {inst.MaterialVerificationStatus === 'Approved' || inst.MaterialVerificationStatus === 'Rejected' ? (
                                                                     <>
-                                                                        <TouchableOpacity 
+                                                                        <TouchableOpacity
                                                                             style={styles.btnViewPhotos}
                                                                             onPress={() => handleViewPhotos(inst)}
                                                                         >
@@ -1100,14 +1100,14 @@ const WorkOrderDetailsScreen = () => {
                                                                             </View>
                                                                         ) : (
                                                                             <>
-                                                                                <TouchableOpacity 
-                                                                                    style={styles.modUploadBtn} 
+                                                                                <TouchableOpacity
+                                                                                    style={styles.modUploadBtn}
                                                                                     onPress={() => handleOpenRMModal(inst, asset)}
                                                                                 >
                                                                                     <Feather name="edit" size={12} color="#ea580c" />
                                                                                     <Text style={styles.modUploadText}>MODIFY / UPLOAD</Text>
                                                                                 </TouchableOpacity>
-                                                                                <TouchableOpacity 
+                                                                                <TouchableOpacity
                                                                                     style={styles.fillFormBtn}
                                                                                     onPress={() => handleFillForm(inst.WorkOrderInstalledAssetDetailsId || inst.Id || null, asset.AssetId || asset.Id || null, inst.WorkOrderInstalledAssetDraftId)}
                                                                                 >
@@ -1128,12 +1128,12 @@ const WorkOrderDetailsScreen = () => {
                                         <Text style={{ textAlign: 'center', marginVertical: 20, color: '#9ca3af' }}>No installations found.</Text>
                                     )}
 
-                                    <TouchableOpacity 
-                                        style={styles.addAnotherInstBtn}
+                                    <TouchableOpacity
+                                        style={styles.addBgBtn}
                                         onPress={() => handleFillForm(null, asset.AssetId || asset.Id || null)}
                                     >
-                                        <Feather name="plus" size={14} color="#ea580c" />
-                                        <Text style={styles.addAnotherInstText}>ADD ANOTHER INSTALLATION</Text>
+                                        <Feather name="plus-circle" size={16} color="#fff" />
+                                        <Text style={styles.addBgBtnText}>ADD ANOTHER INSTALLATION</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -1521,8 +1521,8 @@ const WorkOrderDetailsScreen = () => {
                             </TouchableOpacity>
                         </LinearGradient>
 
-                        <ScrollView 
-                            style={styles.modalBody} 
+                        <ScrollView
+                            style={styles.modalBody}
                             contentContainerStyle={{ flexGrow: 1 }}
                             showsVerticalScrollIndicator={false}
                         >
@@ -1530,8 +1530,8 @@ const WorkOrderDetailsScreen = () => {
                         </ScrollView>
 
                         <View style={styles.modalFooter}>
-                            <TouchableOpacity 
-                                style={styles.btnCancel} 
+                            <TouchableOpacity
+                                style={styles.btnCancel}
                                 onPress={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : setIsFormModalVisible(false)}
                             >
                                 <Text style={styles.btnCancelText}>{currentStep === 0 ? 'Cancel' : 'Back'}</Text>
@@ -1552,9 +1552,9 @@ const WorkOrderDetailsScreen = () => {
                 animationType="fade"
                 onRequestClose={() => setIsSelectionModalVisible(false)}
             >
-                <TouchableOpacity 
-                    style={styles.selectionOverlay} 
-                    activeOpacity={1} 
+                <TouchableOpacity
+                    style={styles.selectionOverlay}
+                    activeOpacity={1}
                     onPress={() => setIsSelectionModalVisible(false)}
                 >
                     <View style={styles.selectionContent}>
@@ -1566,8 +1566,8 @@ const WorkOrderDetailsScreen = () => {
                         </View>
                         <ScrollView style={styles.selectionScroll}>
                             {selectionData.map((item, idx) => (
-                                <TouchableOpacity 
-                                    key={idx} 
+                                <TouchableOpacity
+                                    key={idx}
                                     style={styles.selectionItem}
                                     onPress={() => {
                                         updateFormData(selectionKey, item.Id);
@@ -1649,8 +1649,8 @@ const WorkOrderDetailsScreen = () => {
                             </TouchableOpacity>
                         </LinearGradient>
 
-                        <ScrollView 
-                            style={styles.modalBody} 
+                        <ScrollView
+                            style={styles.modalBody}
                             contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
                             showsVerticalScrollIndicator={false}
                         >
@@ -1671,7 +1671,7 @@ const WorkOrderDetailsScreen = () => {
                                                 <Text style={styles.fieldValueText}>{workOrder?.WONumber} • {workOrder?.ProjectName}</Text>
                                             </View>
                                         </View>
-                                        
+
                                         <View style={{ width: '100%', marginBottom: 16 }}>
                                             <Text style={styles.formFieldLabel}>Asset Name</Text>
                                             <View style={styles.fieldValueBox}>
@@ -1703,12 +1703,12 @@ const WorkOrderDetailsScreen = () => {
                                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
                                         {rmPhotos.map((photo, pIdx) => (
                                             <View key={`rm-p-${pIdx}`} style={{ position: 'relative' }}>
-                                                <Image 
-                                                    source={{ uri: photo.uri }} 
-                                                    style={{ width: (width - 80) / 3, height: (width - 80) / 3, borderRadius: 8, backgroundColor: '#f3f4f6' }} 
+                                                <Image
+                                                    source={{ uri: photo.uri }}
+                                                    style={{ width: (width - 80) / 3, height: (width - 80) / 3, borderRadius: 8, backgroundColor: '#f3f4f6' }}
                                                 />
                                                 {!photo.isExisting && (
-                                                    <TouchableOpacity 
+                                                    <TouchableOpacity
                                                         style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#dc2626', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' }}
                                                         onPress={() => handleRemoveRMPhoto(pIdx)}
                                                     >
@@ -1717,8 +1717,8 @@ const WorkOrderDetailsScreen = () => {
                                                 )}
                                             </View>
                                         ))}
-                                        
-                                        <TouchableOpacity 
+
+                                        <TouchableOpacity
                                             style={[styles.photoUploadBox, { width: (width - 80) / 3, height: (width - 80) / 3, marginTop: 0 }]}
                                             onPress={() => handleAddFileChoice(handleAddRMPhoto)}
                                         >
@@ -1731,14 +1731,14 @@ const WorkOrderDetailsScreen = () => {
                         </ScrollView>
 
                         <View style={styles.modalFooter}>
-                            <TouchableOpacity 
-                                style={styles.btnCancel} 
+                            <TouchableOpacity
+                                style={styles.btnCancel}
                                 onPress={() => setIsRmModalVisible(false)}
                             >
                                 <Text style={styles.btnCancelText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.btnSaveNext, { backgroundColor: '#ea580c' }]} 
+                            <TouchableOpacity
+                                style={[styles.btnSaveNext, { backgroundColor: '#ea580c' }]}
                                 onPress={handleSaveRM}
                                 disabled={isSavingRM}
                             >
@@ -1761,80 +1761,80 @@ const WorkOrderDetailsScreen = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f8fafc' },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    errorText: { fontSize: 16, color: '#dc2626', marginBottom: 20 },
-    backBtn: { backgroundColor: '#c1272d', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+    errorText: { fontSize: 14, color: '#dc2626', marginBottom: 14 },
+    backBtn: { backgroundColor: '#c1272d', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
     backBtnText: { color: '#fff', fontWeight: 'bold' },
 
     // Gradient Header (matching ProjectDetails)
-    headerGradient: { paddingBottom: 24, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
-    headerContent: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: isMobile ? 12 : 20 },
-    backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+    headerGradient: { paddingBottom: 16, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
+    headerContent: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingTop: isMobile ? 12 : 20 },
+    backButton: { width: 37, height: 37, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 11 },
     headerTitleContainer: { flex: 1 },
-    headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 6 },
-    headerBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start' },
-    headerBadgeText: { fontSize: 12, color: '#fff', marginLeft: 6, fontWeight: '500' },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
+    headerBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 12, alignSelf: 'flex-start' },
+    headerBadgeText: { fontSize: 10, color: '#fff', marginLeft: 4, fontWeight: '500' },
 
-    scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40, marginTop: -20 },
+    scrollContent: { paddingHorizontal: 14, paddingTop: 11, paddingBottom: 28, marginTop: -20 },
 
     // Stats Grid
-    statsScrollWrapper: { marginBottom: 16, marginHorizontal: -16, paddingHorizontal: 16 },
-    statsRow: { flexDirection: 'row', gap: 12, paddingRight: 32 },
-    statCard: { backgroundColor: '#fff', width: 140, padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', justifyContent: 'center' },
-    statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-    statIconBox: { width: 28, height: 28, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
-    statValue: { fontSize: 14, fontWeight: 'bold' },
+    statsScrollWrapper: { marginBottom: 11, marginHorizontal: -16, paddingHorizontal: 11 },
+    statsRow: { flexDirection: 'row', gap: 8, paddingRight: 22 },
+    statCard: { backgroundColor: '#fff', width: 119, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', justifyContent: 'center' },
+    statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 },
+    statIconBox: { width: 23, height: 23, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
+    statValue: { fontSize: 12, fontWeight: 'bold' },
     statLabel: { fontSize: 10, color: '#9ca3af', fontWeight: 'bold' },
 
     // General Info Card
-    infoCard: { flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#fff', borderRadius: 8, padding: 16, borderWidth: 1, borderColor: '#e5e7eb', marginBottom: 24, gap: isMobile ? 12 : 24 },
-    infoCol: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    infoIconBoxGray: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center' },
-    infoHash: { color: '#9ca3af', fontSize: 16, fontWeight: 'bold' },
-    infoSubText: { fontSize: 9, color: '#9ca3af', fontWeight: 'bold' },
-    infoMainText: { fontSize: 13, color: '#111827', fontWeight: '600' },
-    infoDivider: { width: 1, backgroundColor: '#e5e7eb', marginHorizontal: 8 },
+    infoCard: { flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#fff', borderRadius: 8, padding: 11, borderWidth: 1, borderColor: '#e5e7eb', marginBottom: 16, gap: isMobile ? 12 : 24 },
+    infoCol: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+    infoIconBoxGray: { width: 27, height: 27, borderRadius: 8, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center' },
+    infoHash: { color: '#9ca3af', fontSize: 14, fontWeight: 'bold' },
+    infoSubText: { fontSize: 10, color: '#9ca3af', fontWeight: 'bold' },
+    infoMainText: { fontSize: 11, color: '#111827', fontWeight: '600' },
+    infoDivider: { width: 1, backgroundColor: '#e5e7eb', marginHorizontal: 5 },
 
     // Sections
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12, paddingHorizontal: 4 },
-    sectionTitle: { fontSize: 14, fontWeight: '800', color: '#4b5563', letterSpacing: 0.5 },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8, paddingHorizontal: 2 },
+    sectionTitle: { fontSize: 12, fontWeight: '800', color: '#4b5563', letterSpacing: 0.5 },
 
     // Asset Cards
-    assetCardOuter: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', marginBottom: 16, overflow: 'hidden' },
-    assetHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-    assetTitle: { fontSize: 15, fontWeight: 'bold', color: '#1f2937', marginRight: 12 },
-    assetTypePill: { flexDirection: 'row', alignItems: 'center', marginRight: 10 },
-    assetTypeLight: { fontSize: 11, color: '#9ca3af' },
-    assetTypeBold: { fontSize: 11, color: '#4b5563', fontWeight: '600' },
-    addInstOutlineBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#e5e7eb' },
+    assetCardOuter: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', marginBottom: 11, overflow: 'hidden' },
+    assetHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 9, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    assetTitle: { fontSize: 13, fontWeight: 'bold', color: '#1f2937', marginRight: 8 },
+    assetTypePill: { flexDirection: 'row', alignItems: 'center', marginRight: 7 },
+    assetTypeLight: { fontSize: 10, color: '#9ca3af' },
+    assetTypeBold: { fontSize: 10, color: '#4b5563', fontWeight: '600' },
+    addInstOutlineBtn: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#e5e7eb' },
     addInstOutlineText: { fontSize: 10, fontWeight: 'bold', color: '#6b7280' },
-    assetInnerBox: { padding: 16 },
+    assetInnerBox: { padding: 11 },
 
     // Workflow Banner
-    workflowBanner: { backgroundColor: '#eff6ff', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 16 },
-    workflowBannerHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
-    workflowBannerTitle: { fontSize: 11, fontWeight: 'bold', color: '#1e3a8a' },
-    workflowBannerSubtitle: { fontSize: 11, color: '#3b82f6', marginTop: 2, fontStyle: 'italic' },
-    workflowRow: { flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#fff', borderRadius: 6, padding: 12, gap: 12 },
+    workflowBanner: { backgroundColor: '#eff6ff', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 11 },
+    workflowBannerHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 7 },
+    workflowBannerTitle: { fontSize: 10, fontWeight: 'bold', color: '#1e3a8a' },
+    workflowBannerSubtitle: { fontSize: 10, color: '#3b82f6', marginTop: 2, fontStyle: 'italic' },
+    workflowRow: { flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#fff', borderRadius: 6, padding: 8, gap: 8 },
     workflowCol: { flex: 1 },
-    workflowColHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+    workflowColHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
     workflowColTitle: { fontSize: 10, fontWeight: 'bold', color: '#4b5563' },
     workflowColText: { fontSize: 10, color: '#6b7280', lineHeight: 16 },
     workflowDivider: { width: isMobile ? ('100%' as any) : 1, height: isMobile ? 1 : ('100%' as any), backgroundColor: '#e5e7eb' },
 
     // Timeline
-    installationsTimeline: { paddingLeft: 4, borderLeftWidth: 2, borderLeftColor: '#e5e7eb', marginLeft: 6, marginBottom: 16 },
-    instRow: { flexDirection: 'row', marginBottom: 16 },
+    installationsTimeline: { paddingLeft: 2, borderLeftWidth: 2, borderLeftColor: '#e5e7eb', marginLeft: 4, marginBottom: 11 },
+    instRow: { flexDirection: 'row', marginBottom: 11 },
     timelineDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#9ca3af', position: 'absolute', left: -9, top: 20 },
-    instContent: { flex: 1, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#f3f4f6', marginLeft: 16, padding: 14 },
-    instTopRow: { flexDirection: isMobile ? 'column' : 'row', gap: 12, marginBottom: 16 },
-    instUserRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-    instLabel: { fontSize: 11, color: '#6b7280' },
-    instValue: { fontSize: 12, color: '#111827', fontWeight: '600' },
-    instContactRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 18 },
+    instContent: { flex: 1, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#f3f4f6', marginLeft: 11, padding: 9 },
+    instTopRow: { flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 11 },
+    instUserRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+    instLabel: { fontSize: 10, color: '#6b7280' },
+    instValue: { fontSize: 10, color: '#111827', fontWeight: '600' },
+    instContactRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingLeft: 12 },
     instContactText: { fontSize: 10, color: '#9ca3af' },
-    instBottomRow: { flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: 12, borderTopWidth: 1, borderTopColor: '#f9fafb', paddingTop: 12 },
-    instBadgesRow: { flexDirection: 'row', gap: 8 },
-    badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+    instBottomRow: { flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: 8, borderTopWidth: 1, borderTopColor: '#f9fafb', paddingTop: 8 },
+    instBadgesRow: { flexDirection: 'row', gap: 5 },
+    badge: { paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 },
     badgeText: { fontSize: 10, fontWeight: 'bold' },
     badgeGreen: { backgroundColor: '#dcfce7' },
     badgeTextGreen: { color: '#16a34a' },
@@ -1842,114 +1842,114 @@ const styles = StyleSheet.create({
     badgeTextOrange: { color: '#ea580c' },
     badgeBlue: { backgroundColor: '#eff6ff' },
     badgeTextBlue: { color: '#3b82f6' },
-    instActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    iconBtnOutline: { width: 28, height: 28, borderRadius: 4, borderWidth: 1, borderColor: '#bfdbfe', justifyContent: 'center', alignItems: 'center' },
-    iconBtnOutlineOrange: { width: 28, height: 28, borderRadius: 4, borderWidth: 1, borderColor: '#fed7aa', justifyContent: 'center', alignItems: 'center' },
-    verifiedStamp: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' },
+    instActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    iconBtnOutline: { width: 23, height: 23, borderRadius: 4, borderWidth: 1, borderColor: '#bfdbfe', justifyContent: 'center', alignItems: 'center' },
+    iconBtnOutlineOrange: { width: 23, height: 23, borderRadius: 4, borderWidth: 1, borderColor: '#fed7aa', justifyContent: 'center', alignItems: 'center' },
+    verifiedStamp: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 4, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' },
     verifiedStampText: { fontSize: 10, fontWeight: 'bold', color: '#10b981' },
-    modUploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#fed7aa' },
+    modUploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#fed7aa' },
     modUploadText: { fontSize: 10, fontWeight: 'bold', color: '#ea580c' },
-    fillFormBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe' },
+    fillFormBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 6, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe' },
     fillFormText: { fontSize: 10, fontWeight: 'bold', color: '#3b82f6' },
-    addAnotherInstBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: '#fca5a5', backgroundColor: '#fff5f5' },
-    addAnotherInstText: { fontSize: 11, fontWeight: 'bold', color: '#dc2626' },
+    addAnotherInstBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', gap: 4, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: '#fca5a5', backgroundColor: '#fff5f5' },
+    addAnotherInstText: { fontSize: 10, fontWeight: 'bold', color: '#dc2626' },
 
     // BG Cards
-    bgScrollWrapper: { marginHorizontal: -16, paddingHorizontal: 16, paddingBottom: 16 },
-    bgCardOuter: { width: 260, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#fdba74', marginRight: 16, borderLeftWidth: 4, borderLeftColor: '#f97316' },
-    bgCardInner: { padding: 14 },
-    bgLabel: { fontSize: 9, color: '#9ca3af', fontWeight: 'bold', marginBottom: 2 },
-    bgBankName: { fontSize: 13, color: '#111827', fontWeight: 'bold', marginBottom: 12 },
-    bgMetricRow: { flexDirection: 'row', marginBottom: 10 },
-    bgValue: { fontSize: 12, color: '#4b5563', fontWeight: '600' },
-    bgValueGreen: { fontSize: 12, color: '#10b981', fontWeight: 'bold' },
-    viewBgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#f3f4f6', backgroundColor: '#f9fafb', borderBottomLeftRadius: 8, borderBottomRightRadius: 8 },
+    bgScrollWrapper: { marginHorizontal: -16, paddingHorizontal: 11, paddingBottom: 11 },
+    bgCardOuter: { width: 221, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#fdba74', marginRight: 11, borderLeftWidth: 4, borderLeftColor: '#f97316' },
+    bgCardInner: { padding: 9 },
+    bgLabel: { fontSize: 10, color: '#9ca3af', fontWeight: 'bold', marginBottom: 2 },
+    bgBankName: { fontSize: 11, color: '#111827', fontWeight: 'bold', marginBottom: 8 },
+    bgMetricRow: { flexDirection: 'row', marginBottom: 7 },
+    bgValue: { fontSize: 10, color: '#4b5563', fontWeight: '600' },
+    bgValueGreen: { fontSize: 10, color: '#10b981', fontWeight: 'bold' },
+    viewBgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 7, borderTopWidth: 1, borderTopColor: '#f3f4f6', backgroundColor: '#f9fafb', borderBottomLeftRadius: 8, borderBottomRightRadius: 8 },
     viewBgText: { fontSize: 10, fontWeight: 'bold', color: '#4b5563' },
 
     // Modal Styles
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
-    modalHeaderTitle: { fontSize: 16, fontWeight: 'bold', color: '#111827' },
-    modalCloseBtn: { padding: 4 },
-    modalScroll: { padding: 16, paddingBottom: 40 },
-    modalSection: { backgroundColor: '#fff', borderRadius: 8, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#e5e7eb', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
-    modalSectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#ea580c', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingBottom: 8 },
-    modalFieldRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    modalFieldRowDoc: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    modalFieldLabel: { fontSize: 12, color: '#6b7280', flex: 1 },
-    modalFieldValue: { fontSize: 12, color: '#1f2937', fontWeight: '500', flex: 1.5, textAlign: 'right' },
-    modalFieldValueDark: { fontSize: 12, color: '#111827', fontWeight: 'bold', flex: 1.5, textAlign: 'right' },
-    docActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa' },
-    docActionText: { fontSize: 11, fontWeight: 'bold', color: '#ea580c' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 11, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
+    modalHeaderTitle: { fontSize: 14, fontWeight: 'bold', color: '#111827' },
+    modalCloseBtn: { padding: 2 },
+    modalScroll: { padding: 11, paddingBottom: 28 },
+    modalSection: { backgroundColor: '#fff', borderRadius: 8, padding: 11, marginBottom: 11, borderWidth: 1, borderColor: '#e5e7eb', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
+    modalSectionTitle: { fontSize: 12, fontWeight: 'bold', color: '#ea580c', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingBottom: 5 },
+    modalFieldRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
+    modalFieldRowDoc: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    modalFieldLabel: { fontSize: 10, color: '#6b7280', flex: 1 },
+    modalFieldValue: { fontSize: 10, color: '#1f2937', fontWeight: '500', flex: 1.5, textAlign: 'right' },
+    modalFieldValueDark: { fontSize: 10, color: '#111827', fontWeight: 'bold', flex: 1.5, textAlign: 'right' },
+    docActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 6, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa' },
+    docActionText: { fontSize: 10, fontWeight: 'bold', color: '#ea580c' },
 
     // BG Upload Button & Form
-    addBgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#c1272d', paddingVertical: 14, borderRadius: 12, marginTop: 16 },
-    addBgBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
-    formLabel: { fontSize: 12, color: '#374151', fontWeight: '600', marginBottom: 6, marginTop: 12 },
-    formInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
-    docPickerBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa', borderRadius: 8, padding: 14, marginTop: 2 },
-    docPickerText: { fontSize: 13, color: '#ea580c', flex: 1 },
-    submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#c1272d', paddingVertical: 16, borderRadius: 12, marginTop: 8, marginBottom: 20 },
-    submitBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+    addBgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#c1272d', paddingVertical: 9, borderRadius: 12, marginTop: 11 },
+    addBgBtnText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+    formLabel: { fontSize: 10, color: '#374151', fontWeight: '600', marginBottom: 4, marginTop: 8 },
+    formInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 7, fontSize: 12, color: '#111827' },
+    docPickerBtn: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa', borderRadius: 8, padding: 9, marginTop: 2 },
+    docPickerText: { fontSize: 11, color: '#ea580c', flex: 1 },
+    submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: '#c1272d', paddingVertical: 11, borderRadius: 12, marginTop: 5, marginBottom: 14 },
+    submitBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
 
     // Form Field Styles
     formGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 },
-    formFieldRow: { width: isMobile ? '100%' : '50%', paddingHorizontal: 8, marginBottom: 12 },
-    formFieldLabel: { fontSize: 11, fontWeight: '500', color: '#4b5563', marginBottom: 6 },
-    inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 12 },
-    inputIcon: { marginRight: 8 },
-    input: { flex: 1, paddingVertical: 8, fontSize: 13, color: '#111827' },
-    dropdownTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8 },
-    dropdownValue: { fontSize: 13, color: '#111827' },
-    sectionDivider: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 10, borderRadius: 8, marginBottom: 12, gap: 10, borderWidth: 1, borderColor: '#f1f5f9' },
+    formFieldRow: { width: isMobile ? '100%' : '50%', paddingHorizontal: 5, marginBottom: 8 },
+    formFieldLabel: { fontSize: 10, fontWeight: '500', color: '#4b5563', marginBottom: 4 },
+    inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 8 },
+    inputIcon: { marginRight: 5 },
+    input: { flex: 1, paddingVertical: 5, fontSize: 11, color: '#111827' },
+    dropdownTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, backgroundColor: '#fff', paddingHorizontal: 8, paddingVertical: 5 },
+    dropdownValue: { fontSize: 11, color: '#111827' },
+    sectionDivider: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 7, borderRadius: 8, marginBottom: 8, gap: 7, borderWidth: 1, borderColor: '#f1f5f9' },
     sectionBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center' },
-    sectionBadgeText: { fontSize: 12, fontWeight: 'bold', color: '#3b82f6' },
-    sectionLabel: { fontSize: 14, fontWeight: 'bold', color: '#3b82f6' },
-    photoUploadBox: { width: 120, height: 120, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb', marginTop: 8 },
-    photoUploadIcon: { marginBottom: 8 },
+    sectionBadgeText: { fontSize: 10, fontWeight: 'bold', color: '#3b82f6' },
+    sectionLabel: { fontSize: 12, fontWeight: 'bold', color: '#3b82f6' },
+    photoUploadBox: { width: 102, height: 102, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb', marginTop: 5 },
+    photoUploadIcon: { marginBottom: 5 },
     photoUploadText: { fontSize: 10, color: '#9ca3af' },
-    btnUploadBG: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#f97316' },
-    btnUploadBGText: { fontSize: 12, color: '#f97316', fontWeight: 'bold' },
+    btnUploadBG: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5, paddingHorizontal: 8, borderRadius: 8, borderWidth: 1, borderColor: '#f97316' },
+    btnUploadBGText: { fontSize: 10, color: '#f97316', fontWeight: 'bold' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-    modalContent: { width: isMobile ? '95%' : 600, minHeight: 500, maxHeight: '95%', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 5 },
-    modalHeaderIcon: { width: 40, height: 40, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
-    modalSubtitle: { fontSize: 12, color: '#fff', opacity: 0.8 },
+    modalContent: { width: isMobile ? '95%' : 600, minHeight: 425, maxHeight: '95%', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 5 },
+    modalHeaderIcon: { width: 34, height: 34, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
+    modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+    modalSubtitle: { fontSize: 10, color: '#fff', opacity: 0.8 },
     modalBody: { flex: 1, backgroundColor: '#f8fafc' },
-    modalFooter: { flexDirection: 'row', padding: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb', backgroundColor: '#fff', justifyContent: 'space-between' },
-    btnCancel: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
-    btnCancelText: { color: '#6b7280', fontSize: 14, fontWeight: 'bold' },
-    btnSaveNext: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#3b82f6', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, gap: 8 },
-    btnSaveNextText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+    modalFooter: { flexDirection: 'row', padding: 11, borderTopWidth: 1, borderTopColor: '#e5e7eb', backgroundColor: '#fff', justifyContent: 'space-between' },
+    btnCancel: { paddingVertical: 7, paddingHorizontal: 14, borderRadius: 8 },
+    btnCancelText: { color: '#6b7280', fontSize: 12, fontWeight: 'bold' },
+    btnSaveNext: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#3b82f6', paddingVertical: 7, paddingHorizontal: 14, borderRadius: 8, gap: 5 },
+    btnSaveNextText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
     selectionOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     selectionContent: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: '80%' },
-    selectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-    selectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#111827' },
-    selectionScroll: { padding: 8 },
-    selectionItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-    selectionText: { fontSize: 14, color: '#374151' },
+    selectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 11, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    selectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#111827' },
+    selectionScroll: { padding: 5 },
+    selectionItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 11, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    selectionText: { fontSize: 12, color: '#374151' },
     selectionTextSelected: { fontWeight: 'bold', color: '#c1272d' },
-    selectionContentWide: { backgroundColor: '#fff', margin: 20, borderRadius: 16, padding: 0, overflow: 'hidden' },
-    sourceGrid: { flexDirection: 'row', padding: 20, gap: 20, justifyContent: 'center' },
-    sourceItem: { alignItems: 'center', gap: 8 },
-    sourceIconBox: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
-    sourceText: { fontSize: 12, fontWeight: '500', color: '#4b5563' },
-    sourceCancelBtn: { padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', alignItems: 'center' },
-    sourceCancelText: { color: '#ef4444', fontWeight: 'bold', fontSize: 14 },
-    fieldContainer: { marginBottom: 16 },
-    fieldLabelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-    fieldLabel: { fontSize: 12, fontWeight: 'bold', color: '#6b7280', marginLeft: 6 },
-    fieldValueBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 12 },
-    fieldIconBox: { width: 32, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    fieldValueText: { fontSize: 13, fontWeight: '600', color: '#111827', flex: 1 },
+    selectionContentWide: { backgroundColor: '#fff', margin: 14, borderRadius: 16, padding: 0, overflow: 'hidden' },
+    sourceGrid: { flexDirection: 'row', padding: 14, gap: 14, justifyContent: 'center' },
+    sourceItem: { alignItems: 'center', gap: 5 },
+    sourceIconBox: { width: 47, height: 47, borderRadius: 23, justifyContent: 'center', alignItems: 'center' },
+    sourceText: { fontSize: 10, fontWeight: '500', color: '#4b5563' },
+    sourceCancelBtn: { padding: 11, borderTopWidth: 1, borderTopColor: '#f3f4f6', alignItems: 'center' },
+    sourceCancelText: { color: '#ef4444', fontWeight: 'bold', fontSize: 12 },
+    fieldContainer: { marginBottom: 11 },
+    fieldLabelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
+    fieldLabel: { fontSize: 10, fontWeight: 'bold', color: '#6b7280', marginLeft: 4 },
+    fieldValueBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 8 },
+    fieldIconBox: { width: 27, height: 27, borderRadius: 6, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
+    fieldValueText: { fontSize: 11, fontWeight: '600', color: '#111827', flex: 1 },
     imageModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
-    imageModalClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 10 },
+    imageModalClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 7 },
     imageSlide: { width, height: '100%', justifyContent: 'center', alignItems: 'center' },
     fullImage: { width: '90%', height: '80%' },
-    btnApprove: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#059669', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4 },
-    btnReject: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#dc2626', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4 },
-    btnViewPhotos: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#3b82f6', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, gap: 4, marginTop: 8 },
-    btnActionText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
-    modalBodyPadding: { padding: 16 },
+    btnApprove: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#059669', paddingVertical: 4, paddingHorizontal: 7, borderRadius: 6, gap: 2 },
+    btnReject: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#dc2626', paddingVertical: 4, paddingHorizontal: 7, borderRadius: 6, gap: 2 },
+    btnViewPhotos: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#3b82f6', paddingVertical: 4, paddingHorizontal: 7, borderRadius: 6, gap: 2, marginTop: 5 },
+    btnActionText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+    modalBodyPadding: { padding: 11 },
 });
 
 export default WorkOrderDetailsScreen;

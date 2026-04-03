@@ -6,714 +6,286 @@ import SkeletonLoader from '../components/SkeletonLoader';
 import { MaterialIcons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
-const isMobile = width < 768;
 
 const ProjectScreen = ({ navigation }: any) => {
-	const [projects, setProjects] = useState<Project[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [refreshing, setRefreshing] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-	const loadProjects = async () => {
-		try {
-			setError(null);
-			const response = await fetchProjects(1, 25);
-			setProjects(response.Data || []);
-		} catch (err: any) {
-			console.error('Error loading projects:', err);
-			if (err?.statusCode === 401) {
-				Alert.alert('Session Expired', 'Your session has expired. Please log in again.', [
-					{
-						text: 'OK',
-						onPress: () => {
-							const { authService } = require('../services/authService');
-							authService.clearAuthData();
-							navigation?.replace('Login');
-						},
-					},
-				]);
-				return;
-			}
-			setError('Failed to load projects');
-		} finally {
-			setLoading(false);
-			setRefreshing(false);
-		}
-	};
+    const loadProjects = async () => {
+        try {
+            setError(null);
+            const response = await fetchProjects(1, 25);
+            setProjects(response.Data || []);
+        } catch (err: any) {
+            console.error('Error loading projects:', err);
+            if (err?.statusCode === 401) {
+                Alert.alert('Session Expired', 'Your session has expired. Please log in again.', [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            const { authService } = require('../services/authService');
+                            authService.clearAuthData();
+                            navigation?.replace('Login');
+                        },
+                    },
+                ]);
+                return;
+            }
+            setError('Failed to load projects');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
-	useEffect(() => {
-		loadProjects();
-	}, []);
+    useEffect(() => { loadProjects(); }, []);
+    const onRefresh = () => { setRefreshing(true); loadProjects(); };
 
-	const onRefresh = () => {
-		setRefreshing(true);
-		loadProjects();
-	};
+    const handleDeleteProject = (projectId: number, projectName: string) => {
+        Alert.alert('Delete Project', `Are you sure you want to delete "${projectName}"?`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await deleteProject(projectId);
+                        setProjects(projects.filter((p) => p.Id !== projectId));
+                        Alert.alert('Success', 'Project deleted successfully');
+                    } catch (error: any) {
+                        if (error?.statusCode === 401) {
+                            Alert.alert('Session Expired', 'Your session has expired.', [
+                                { text: 'OK', onPress: () => { const { authService } = require('../services/authService'); authService.clearAuthData(); navigation?.replace('Login'); } },
+                            ]);
+                            return;
+                        }
+                        Alert.alert('Error', 'Failed to delete project');
+                    }
+                },
+            },
+        ]);
+    };
 
-	const handleDeleteProject = (projectId: number, projectName: string) => {
-		Alert.alert('Delete Project', `Are you sure you want to delete "${projectName}"?`, [
-			{ text: 'Cancel', style: 'cancel' },
-			{
-				text: 'Delete',
-				style: 'destructive',
-				onPress: async () => {
-					try {
-						await deleteProject(projectId);
-						setProjects(projects.filter((p) => p.Id !== projectId));
-						Alert.alert('Success', 'Project deleted successfully');
-					} catch (error: any) {
-						if (error?.statusCode === 401) {
-							Alert.alert('Session Expired', 'Your session has expired. Please log in again.', [
-								{
-									text: 'OK',
-									onPress: () => {
-										const { authService } = require('../services/authService');
-										authService.clearAuthData();
-										navigation?.replace('Login');
-									},
-								},
-							]);
-							return;
-						}
-						Alert.alert('Error', 'Failed to delete project');
-					}
-				},
-			},
-		]);
-	};
+    const formatCurrency = (amount: number) =>
+        new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
 
-	const formatCurrency = (amount: number) => {
-		return new Intl.NumberFormat('en-IN', {
-			style: 'currency',
-			currency: 'INR',
-			minimumFractionDigits: 0,
-			maximumFractionDigits: 0,
-		}).format(amount);
-	};
+    const formatDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            return `${date.getDate().toString().padStart(2, '0')} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+        } catch { return dateString; }
+    };
 
-	const formatDate = (dateString: string) => {
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, '0');
-			const month = date.toLocaleString('default', { month: 'short' });
-			const year = date.getFullYear();
-			return `${day} ${month} ${year}`;
-		} catch {
-			return dateString;
-		}
-	};
+    const getFundingColors = (type: string) => {
+        const t = (type || '').toLowerCase();
+        if (t.includes('depository')) return { bg: '#f4ebff', text: '#8b5cf6', accent: '#8b5cf6' };
+        if (t.includes('financialassistance')) return { bg: '#fce8e8', text: '#ef4444', accent: '#ef4444' };
+        if (t.includes('budgetary')) return { bg: '#e0fbf0', text: '#10b981', accent: '#10b981' };
+        if (t.includes('self')) return { bg: '#e0f2fe', text: '#3b82f6', accent: '#3b82f6' };
+        return { bg: '#f3f4f6', text: '#4b5563', accent: '#6b7280' };
+    };
 
-	const getFundingBadgeStyle = (type: string) => {
-		const t = (type || '').toLowerCase();
-		if (t.includes('depository')) return { bg: '#f4ebff', text: '#8b5cf6' };
-		if (t.includes('financialassistance')) return { bg: '#fce8e8', text: '#ef4444' };
-		if (t.includes('budgetary')) return { bg: '#e0fbf0', text: '#10b981' };
-		if (t.includes('self')) return { bg: '#e0f2fe', text: '#3b82f6' };
-		return { bg: '#f3f4f6', text: '#4b5563' };
-	};
+    const totalBudget = projects.reduce((sum, p) => sum + (p.TotalBudget || 0), 0);
 
-	const totalBudget = projects.reduce((sum, p) => sum + (p.TotalBudget || 0), 0);
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.loadingContainer}>
+                    <SkeletonLoader variant="card" count={4} />
+                </View>
+            </SafeAreaView>
+        );
+    }
 
-	if (loading) {
-		return (
-			<SafeAreaView style={styles.container}>
-				<View style={styles.loadingContainer}>
-					<SkeletonLoader />
-					<SkeletonLoader />
-					<SkeletonLoader />
-				</View>
-			</SafeAreaView>
-		);
-	}
+    if (error) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.errorContainer}>
+                    <MaterialCommunityIcons name="alert-circle-outline" size={48} color="#dc2626" />
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={loadProjects}>
+                        <Text style={styles.retryButtonText}>Retry</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
-	if (error) {
-		return (
-			<SafeAreaView style={styles.container}>
-				<View style={styles.errorContainer}>
-					<Text style={styles.errorText}>{error}</Text>
-					<TouchableOpacity style={styles.retryButton} onPress={loadProjects}>
-						<Text style={styles.retryButtonText}>Retry</Text>
-					</TouchableOpacity>
-				</View>
-			</SafeAreaView>
-		);
-	}
+    return (
+        <SafeAreaView style={styles.container} edges={['left', 'right']}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Header */}
+                <View style={styles.headerWrapper}>
+                    <View style={styles.headerLeft}>
+                        <View style={styles.headerIconBox}>
+                            <MaterialIcons name='assessment' size={20} color='#fff' />
+                        </View>
+                        <View>
+                            <Text style={styles.headerTitle}>Projects</Text>
+                            <Text style={styles.headerSubtitle}>{projects.length} projects loaded</Text>
+                        </View>
+                    </View>
+                    <TouchableOpacity style={styles.btnSearch}>
+                        <Feather name='search' size={14} color='#f97316' />
+                        <Text style={styles.btnSearchText}>Search</Text>
+                    </TouchableOpacity>
+                </View>
 
-	return (
-		<SafeAreaView style={styles.container} edges={['left', 'right']}>
-			<ScrollView
-				contentContainerStyle={styles.scrollView}
-				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-			>
-				{/* Header Actions */}
-				<View style={styles.headerWrapper}>
-					<View style={styles.headerLeft}>
-						<View style={styles.headerIconBox}>
-							<MaterialIcons name='assessment' size={24} color='#fff' />
-						</View>
-						<View>
-							<Text style={styles.headerTitle}>Projects Management</Text>
-							<Text style={styles.headerSubtitle}>Manage and monitor all your projects efficiently</Text>
-						</View>
-					</View>
-					<View style={styles.headerRight}>
-						<TouchableOpacity style={styles.btnSearch}>
-							<Feather name='search' size={16} color='#f97316' />
-							<Text style={styles.btnSearchText}>Search Projects</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
+                {/* Summary strip */}
+                <View style={styles.summaryStrip}>
+                    <View style={styles.summaryItem}>
+                        <MaterialIcons name='folder' size={14} color='#dc2626' />
+                        <Text style={styles.summaryValue}>{projects.length}</Text>
+                        <Text style={styles.summaryLabel}>Total</Text>
+                    </View>
+                    <View style={styles.summaryDivider} />
+                    <View style={styles.summaryItem}>
+                        <MaterialIcons name='currency-rupee' size={14} color='#f97316' />
+                        <Text style={styles.summaryValue}>{formatCurrency(totalBudget)}</Text>
+                        <Text style={styles.summaryLabel}>Budget</Text>
+                    </View>
+                </View>
 
-				{/* Summary Cards */}
-				<View style={styles.summaryCardsRow}>
-					<View style={styles.card}>
-						<View style={styles.cardHeaderSmall}>
-							<MaterialIcons name='folder' size={16} color='#dc2626' />
-							<Text style={styles.cardTitleSmall}>Total Projects</Text>
-						</View>
-						<Text style={styles.cardValueSmall}>{projects.length || 0}</Text>
-					</View>
+                {/* Project Cards */}
+                {projects.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <MaterialCommunityIcons name="folder-open-outline" size={52} color="#cbd5e1" />
+                        <Text style={styles.emptyText}>No projects found</Text>
+                    </View>
+                ) : (
+                    projects.map((project, index) => {
+                        const colors = getFundingColors(project.TypeOfFundingText);
+                        return (
+                            <TouchableOpacity
+                                key={project.Id}
+                                style={styles.card}
+                                activeOpacity={0.85}
+                                onPress={() => navigation?.navigate('ProjectDetails', { project })}
+                            >
+                                <View style={[styles.cardAccent, { backgroundColor: colors.accent }]} />
+                                <View style={styles.cardBody}>
+                                    {/* Top row */}
+                                    <View style={styles.cardTopRow}>
+                                        <Text style={styles.cardIndex}>#{index + 1}</Text>
+                                        <View style={[styles.fundingBadge, { backgroundColor: colors.bg }]}>
+                                            <Text style={[styles.fundingBadgeText, { color: colors.text }]} numberOfLines={1}>
+                                                {project.TypeOfFundingText || 'General'}
+                                            </Text>
+                                        </View>
+                                    </View>
 
-					<View style={styles.card}>
-						<View style={styles.cardHeaderSmall}>
-							<MaterialIcons name='currency-rupee' size={16} color='#f97316' />
-							<Text style={styles.cardTitleSmall}>Total Budget</Text>
-						</View>
-						<Text style={styles.cardValueSmall}>{formatCurrency(totalBudget)}</Text>
-					</View>
-				</View>
+                                    {/* Project name */}
+                                    <Text style={styles.cardName} numberOfLines={2}>{project.Name}</Text>
 
-				{/* List Section */}
-				<View style={styles.listSection}>
-					<View style={styles.listHeader}>
-						<View style={styles.listHeaderLeft}>
-							<MaterialIcons name='list-alt' size={24} color='#cc1a1f' style={styles.listTitleIcon} />
-							<Text style={styles.listTitle}>Projects List</Text>
-							<Text style={styles.listSubtitle}>
-								({projects.length} of {projects.length} projects)
-							</Text>
-						</View>
-						<View style={styles.viewToggleGroup}>
-							<TouchableOpacity style={styles.toggleBtnActive}>
-								<MaterialIcons name='format-list-bulleted' size={18} color='#fff' />
-							</TouchableOpacity>
-							{/* <TouchableOpacity style={styles.toggleBtnInactive}>
-								<MaterialIcons name='grid-view' size={18} color='#6b7280' />
-							</TouchableOpacity> */}
-						</View>
-					</View>
+                                    {/* Meta row */}
+                                    <View style={styles.cardMetaRow}>
+                                        <View style={styles.cardMeta}>
+                                            <Feather name="calendar" size={11} color="#94a3b8" />
+                                            <Text style={styles.cardMetaText}>{formatDate(project.StartYear)}</Text>
+                                        </View>
+                                        <View style={styles.metaDivider} />
+                                        <View style={styles.cardMeta}>
+                                            <Feather name="briefcase" size={11} color="#94a3b8" />
+                                            <Text style={styles.cardMetaText} numberOfLines={1}>{project.FinancialYearName}</Text>
+                                        </View>
+                                    </View>
 
-					{projects.length === 0 ? (
-						<View style={styles.emptyContainer}>
-							<Text style={styles.emptyText}>No projects found</Text>
-						</View>
-					) : (
-						<ScrollView horizontal showsHorizontalScrollIndicator>
-							<View style={styles.tableWrapper}>
-								{/* Table Header */}
-								<View style={styles.tableHeaderRow}>
-									<View style={styles.colSlNo}>
-										<Text style={styles.tableHeaderText}>Sl.No</Text>
-									</View>
-									<View style={styles.colName}>
-										<Text style={styles.tableHeaderText}>Name</Text>
-									</View>
-									<View style={styles.colFunding}>
-										<Text style={styles.tableHeaderText}>Type Of Funding</Text>
-									</View>
-									<View style={styles.colYear}>
-										<Text style={styles.tableHeaderText}>Start Year</Text>
-									</View>
-									<View style={styles.colFinYear}>
-										<Text style={styles.tableHeaderText}>Financial Year</Text>
-									</View>
-									<View style={styles.colDept}>
-										<Text style={styles.tableHeaderText}>Authorised Department</Text>
-									</View>
-									<View style={styles.colBudget}>
-										<Text style={styles.tableHeaderText}>Total Budget</Text>
-									</View>
-								</View>
+                                    {/* Footer */}
+                                    <View style={styles.cardFooter}>
+                                        <View style={styles.cardBudget}>
+                                            <Text style={styles.cardBudgetLabel}>Budget</Text>
+                                            <Text style={styles.cardBudgetValue}>{formatCurrency(project.TotalBudget)}</Text>
+                                        </View>
+                                        <View style={styles.cardDeptWrap}>
+                                            <Text style={styles.cardDept} numberOfLines={1}>{project.AuthorisedDepartmentName}</Text>
+                                        </View>
+                                        <Feather name="chevron-right" size={16} color="#cbd5e1" />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    })
+                )}
 
-								{/* Table Rows */}
-								{projects.map((project, index) => {
-									const badgeStyle = getFundingBadgeStyle(project.TypeOfFundingText);
-									return (
-										<View key={project.Id} style={styles.tableRow}>
-											<View style={styles.colSlNo}>
-												<Text style={styles.cellTextDark}>{index + 1}</Text>
-											</View>
-											<View style={styles.colName}>
-												<TouchableOpacity
-													onPress={() => navigation?.navigate('ProjectDetails', { project })}
-													activeOpacity={0.7}
-												>
-													<Text style={styles.cellTextLink} numberOfLines={2}>
-														{project.Name}
-													</Text>
-												</TouchableOpacity>
-											</View>
-											<View style={styles.colFunding}>
-												<View style={[styles.badgeWrapper, { backgroundColor: badgeStyle.bg }]}>
-													<Text
-														style={[styles.badgeText, { color: badgeStyle.text }]}
-														numberOfLines={1}
-													>
-														{project.TypeOfFundingText}
-													</Text>
-												</View>
-											</View>
-											<View style={styles.colYear}>
-												<Text style={styles.cellTextGray}>{formatDate(project.StartYear)}</Text>
-											</View>
-											<View style={styles.colFinYear}>
-												<Text style={styles.cellTextGray}>{project.FinancialYearName}</Text>
-											</View>
-											<View style={styles.colDept}>
-												<Text style={styles.cellTextGray} numberOfLines={2}>
-													{project.AuthorisedDepartmentName}
-												</Text>
-											</View>
-											<View style={styles.colBudget}>
-												<Text style={styles.cellTextDark}>
-													{formatCurrency(project.TotalBudget)}
-												</Text>
-											</View>
-
-										</View>
-									);
-								})}
-							</View>
-						</ScrollView>
-					)}
-					{/* Pagination */}
-					{projects.length > 0 && (
-						<View style={styles.paginationWrapper}>
-							<View style={styles.paginationControls}>
-								<Text style={styles.paginationText}>Rows per page:</Text>
-								<View style={styles.paginationDropdown}>
-									<Text style={{ fontSize: 13, marginRight: 4, color: '#374151' }}>25</Text>
-									<MaterialIcons name='keyboard-arrow-down' size={16} color='#6b7280' />
-								</View>
-								<Text style={styles.paginationText}>
-									1-{projects.length} of {projects.length}
-								</Text>
-								<MaterialIcons name='keyboard-double-arrow-left' size={20} color='#d1d5db' />
-								<MaterialIcons name='keyboard-arrow-left' size={20} color='#d1d5db' />
-								<View style={styles.pageButtonBox}>
-									<Text style={{ fontSize: 13, color: '#374151', fontWeight: '500' }}>1</Text>
-								</View>
-								<MaterialIcons name='keyboard-arrow-right' size={20} color='#d1d5db' />
-								<MaterialIcons name='keyboard-double-arrow-right' size={20} color='#d1d5db' />
-							</View>
-						</View>
-					)}
-				</View>
-			</ScrollView>
-		</SafeAreaView>
-	);
+                {projects.length > 0 && (
+                    <Text style={styles.footerText}>Showing {projects.length} projects</Text>
+                )}
+            </ScrollView>
+        </SafeAreaView>
+    );
 };
 
 const styles = StyleSheet.create({
-	scrollView: {
-		flex: 1,
-		paddingHorizontal: isMobile ? 12 : 24,
-	},
-	container: {
-		flex: 1,
-		backgroundColor: '#eef1f5',
-	},
-	mainScrollView: {
-		flex: 1,
-		paddingHorizontal: isMobile ? 12 : 24,
-	},
-	loadingContainer: {
-		flex: 1,
-		justifyContent: 'center',
-		paddingHorizontal: 16,
-	},
-	errorContainer: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		paddingHorizontal: 20,
-	},
-	errorText: {
-		fontSize: 16,
-		color: '#dc2626',
-		textAlign: 'center',
-		marginBottom: 20,
-	},
-	retryButton: {
-		backgroundColor: '#ef4444',
-		paddingHorizontal: 24,
-		paddingVertical: 12,
-		borderRadius: 4,
-	},
-	retryButtonText: {
-		color: '#fff',
-		fontSize: 16,
-		fontWeight: '600',
-	},
-	emptyContainer: {
-		paddingVertical: 40,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	emptyText: {
-		fontSize: 16,
-		color: '#9ca3af',
-	},
-	// Header
-	headerWrapper: {
-		flexDirection: isMobile ? 'column' : 'row',
-		justifyContent: 'space-between',
-		alignItems: isMobile ? 'flex-start' : 'center',
-		marginBottom: 24,
-		gap: 16,
-		marginTop: 10,
-	},
-	headerLeft: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	headerIconBox: {
-		backgroundColor: '#dc2626',
-		width: 44,
-		height: 44,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginRight: 12,
-	},
-	headerTitle: {
-		fontSize: 22,
-		fontWeight: 'bold',
-		color: '#111827',
-		marginBottom: 1,
-		marginTop: 1,
-	},
-	headerSubtitle: {
-		fontSize: 13,
-		color: '#6b7280',
-	},
-	headerRight: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-		width: isMobile ? '100%' : 'auto',
-	},
-	btnSearch: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: '#fff',
-		borderWidth: 1,
-		borderColor: '#fed7aa',
-		borderRadius: 24,
-		paddingHorizontal: 16,
-		paddingVertical: 10,
-		flex: 1,
-	},
-	btnSearchText: {
-		color: '#ea580c',
-		marginLeft: 6,
-		fontWeight: '600',
-		fontSize: 13,
-	},
-	btnAdd: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: '#fff',
-		borderWidth: 1,
-		borderColor: '#fecaca',
-		borderRadius: 24,
-		paddingHorizontal: 16,
-		paddingVertical: 10,
-	},
-	btnAddText: {
-		color: '#dc2626',
-		marginLeft: 6,
-		fontWeight: '600',
-		fontSize: 13,
-	},
-	// Summary Cards
-	summaryCardsRow: {
-		flexDirection: 'row',
-		marginBottom: 24,
-		gap: isMobile ? 12 : 24,
-	},
-	card: {
-		flex: 1,
-		backgroundColor: '#fff',
-		borderRadius: 12,
-		padding: 12,
-		overflow: 'hidden',
-		// Shadow
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.04,
-		shadowRadius: 2,
-		elevation: 2,
-	},
-	cardHeaderSmall: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 4,
-		gap: 6,
-	},
-	cardTitleSmall: {
-		fontSize: 12,
-		fontWeight: '600',
-		color: '#6b7280',
-	},
-	cardValueSmall: {
-		fontSize: 15,
-		fontWeight: 'bold',
-		color: '#111827',
-	},
-	cardIconBoxRow: {
-		flexDirection: isMobile ? 'column' : 'row',
-		alignItems: isMobile ? 'flex-start' : 'center',
-		flex: 1,
-		zIndex: 10,
-	},
-	cardIconBoxRed: {
-		backgroundColor: '#dc2626',
-		width: isMobile ? 36 : 48,
-		height: isMobile ? 36 : 48,
-		borderRadius: 10,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginRight: isMobile ? 0 : 16,
-		marginBottom: isMobile ? 8 : 0,
-	},
-	cardIconBoxOrange: {
-		backgroundColor: '#f97316',
-		width: isMobile ? 36 : 48,
-		height: isMobile ? 36 : 48,
-		borderRadius: 10,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginRight: isMobile ? 0 : 16,
-		marginBottom: isMobile ? 8 : 0,
-	},
-	cardTitle: {
-		fontSize: isMobile ? 13 : 15,
-		fontWeight: 'bold',
-		color: '#111827',
-		marginBottom: 4,
-	},
-	cardSubtitle: {
-		fontSize: isMobile ? 10 : 12,
-		color: '#9ca3af',
-		lineHeight: isMobile ? 14 : undefined,
-	},
-	cardBadgeRed: {
-		position: 'absolute',
-		top: 0,
-		right: 0,
-		backgroundColor: '#fee2e2',
-		borderBottomLeftRadius: isMobile ? 24 : 48,
-		paddingTop: isMobile ? 8 : 12,
-		paddingRight: isMobile ? 12 : 16,
-		paddingBottom: isMobile ? 12 : 24,
-		paddingLeft: isMobile ? 16 : 32,
-	},
-	cardBadgeRedText: {
-		color: '#b91c1c',
-		fontWeight: 'bold',
-		fontSize: isMobile ? 13 : 18,
-	},
-	cardBadgeOrange: {
-		position: 'absolute',
-		top: 0,
-		right: 0,
-		backgroundColor: '#ffedd5',
-		borderBottomLeftRadius: isMobile ? 24 : 48,
-		paddingTop: isMobile ? 8 : 12,
-		paddingRight: isMobile ? 12 : 16,
-		paddingBottom: isMobile ? 12 : 24,
-		paddingLeft: isMobile ? 16 : 32,
-	},
-	cardBadgeOrangeText: {
-		color: '#c2410c',
-		fontWeight: 'bold',
-		fontSize: isMobile ? 13 : 18,
-	},
-	// List Section
-	listSection: {
-		flex: 1,
-		backgroundColor: '#fff',
-		borderRadius: 12,
-		paddingVertical: 16,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.04,
-		shadowRadius: 4,
-		elevation: 2,
-		marginBottom: 24,
-	},
-	listHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		paddingHorizontal: 20,
-		marginBottom: 16,
-	},
-	listHeaderLeft: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	listTitleIcon: {
-		marginRight: 8,
-	},
-	listTitle: {
-		fontSize: 16,
-		fontWeight: 'bold',
-		color: '#111827',
-	},
-	listSubtitle: {
-		fontSize: 13,
-		color: '#6b7280',
-		marginLeft: 8,
-	},
-	viewToggleGroup: {
-		flexDirection: 'row',
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
-		borderRadius: 6,
-		overflow: 'hidden',
-	},
-	toggleBtnActive: {
-		backgroundColor: '#dc2626',
-		padding: 6,
-	},
-	toggleBtnInactive: {
-		backgroundColor: '#fff',
-		padding: 6,
-	},
-	// Table
-	tableWrapper: {
-		minWidth: 1050,
-	},
-	tableHeaderRow: {
-		flexDirection: 'row',
-		paddingVertical: 12,
-		paddingHorizontal: 20,
-		borderBottomWidth: 1,
-		borderBottomColor: '#e5e7eb',
-	},
-	tableHeaderText: {
-		color: '#dc2626',
-		fontSize: 12,
-		fontWeight: 'bold',
-	},
-	tableRow: {
-		flexDirection: 'row',
-		paddingVertical: 16,
-		paddingHorizontal: 20,
-		borderBottomWidth: 1,
-		borderBottomColor: '#f3f4f6',
-		alignItems: 'center',
-	},
-	colSlNo: { width: 60 },
-	colName: { width: 150 },
-	colFunding: { width: 220 },
-	colYear: { width: 120 },
-	colFinYear: { width: 120 },
-	colDept: { width: 180 },
-	colBudget: { width: 100 },
-	colAction: { flex: 1, flexDirection: 'row', gap: 8 },
-	cellTextDark: {
-		color: '#1f2937',
-		fontSize: 13,
-		fontWeight: '500',
-	},
-	cellTextLink: {
-		color: '#2563eb',
-		fontSize: 13,
-		fontWeight: '600',
-		textDecorationLine: 'underline',
-	},
-	cellTextGray: {
-		color: '#6b7280',
-		fontSize: 13,
-	},
-	badgeWrapper: {
-		paddingHorizontal: 12,
-		paddingVertical: 6,
-		borderRadius: 16,
-		alignSelf: 'flex-start',
-	},
-	badgeText: {
-		fontSize: 11,
-		fontWeight: '600',
-	},
-	actionBtnView: {
-		width: 28,
-		height: 28,
-		borderRadius: 14,
-		borderWidth: 1,
-		borderColor: '#bfdbfe',
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	actionBtnEdit: {
-		width: 28,
-		height: 28,
-		borderRadius: 14,
-		borderWidth: 1,
-		borderColor: '#fed7aa',
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	actionBtnDelete: {
-		width: 28,
-		height: 28,
-		borderRadius: 14,
-		borderWidth: 1,
-		borderColor: '#fecaca',
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	// Pagination
-	paginationWrapper: {
-		flexDirection: 'row',
-		justifyContent: 'flex-end',
-		alignItems: 'center',
-		paddingHorizontal: 20,
-		paddingTop: 16,
-	},
-	paginationControls: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	paginationText: {
-		fontSize: 13,
-		color: '#6b7280',
-		marginHorizontal: 12,
-		marginLeft: 3,
-	},
+    container: { flex: 1, backgroundColor: '#f1f5f9' },
+    scrollContent: { paddingHorizontal: 14, paddingBottom: 24, paddingTop: 8 },
+    loadingContainer: { flex: 1, justifyContent: 'center', paddingHorizontal: 14 },
+    errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, gap: 12 },
+    errorText: { fontSize: 14, color: '#dc2626', textAlign: 'center' },
+    retryButton: { backgroundColor: '#ef4444', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8 },
+    retryButtonText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 
-	paginationDropdown: {
-		borderWidth: 1,
-		borderColor: '#d1d5db',
-		borderRadius: 4,
-		paddingHorizontal: 6,
-		paddingVertical: 2,
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	pageButtonBox: {
-		width: 24,
-		height: 24,
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 1,
-		borderColor: '#d1d5db',
-		borderRadius: 4,
-		marginHorizontal: 8,
-	},
+    // Header
+    headerWrapper: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 4 },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    headerIconBox: { backgroundColor: '#dc2626', width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { fontSize: 17, fontWeight: '800', color: '#0f172a' },
+    headerSubtitle: { fontSize: 11, color: '#64748b' },
+    btnSearch: {
+        flexDirection: 'row', alignItems: 'center', gap: 5,
+        backgroundColor: '#fff', borderWidth: 1, borderColor: '#fed7aa',
+        borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
+    },
+    btnSearchText: { color: '#ea580c', fontWeight: '700', fontSize: 12 },
+
+    // Summary strip
+    summaryStrip: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 14,
+        elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04, shadowRadius: 3, gap: 0,
+    },
+    summaryItem: { flex: 1, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 },
+    summaryValue: { fontSize: 13, fontWeight: '800', color: '#0f172a' },
+    summaryLabel: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+    summaryDivider: { width: 1, height: 24, backgroundColor: '#e2e8f0' },
+
+    // Cards
+    card: {
+        backgroundColor: '#fff', borderRadius: 16, marginBottom: 10,
+        flexDirection: 'row', overflow: 'hidden',
+        elevation: 2, shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6,
+    },
+    cardAccent: { width: 4 },
+    cardBody: { flex: 1, padding: 12 },
+    cardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+    cardIndex: { fontSize: 10, color: '#94a3b8', fontWeight: '600' },
+    fundingBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20, maxWidth: width * 0.55 },
+    fundingBadgeText: { fontSize: 10, fontWeight: '700' },
+    cardName: { fontSize: 14, color: '#0f172a', fontWeight: '700', marginBottom: 8, lineHeight: 19 },
+    cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+    cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    cardMetaText: { fontSize: 11, color: '#64748b' },
+    metaDivider: { width: 1, height: 12, backgroundColor: '#e2e8f0' },
+    cardFooter: {
+        flexDirection: 'row', alignItems: 'center',
+        borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 8, gap: 8,
+    },
+    cardBudget: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    cardBudgetLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '600' },
+    cardBudgetValue: { fontSize: 12, color: '#dc2626', fontWeight: '800' },
+    cardDeptWrap: { flex: 1 },
+    cardDept: { fontSize: 10, color: '#64748b', textAlign: 'right' },
+
+    emptyContainer: { paddingVertical: 48, alignItems: 'center', gap: 10 },
+    emptyText: { fontSize: 14, color: '#94a3b8', fontWeight: '500' },
+    footerText: { textAlign: 'center', fontSize: 11, color: '#94a3b8', marginTop: 4 },
 });
 
 export default ProjectScreen;
